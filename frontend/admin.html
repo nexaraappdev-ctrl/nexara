@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RandomChat — Staff Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #12121a; --border: #1e1e2e;
+      --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e2f0;
+      --muted: #6b6b8a; --danger: #ef4444; --success: #22c55e;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; }
+
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px; border-bottom: 1px solid var(--border); background: var(--surface);
+    }
+    .logo-sm { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .back-btn {
+      padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--muted); font-family: 'DM Mono', monospace;
+      font-size: 0.8rem; cursor: pointer; transition: all 0.2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .back-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+    h1 { font-family: 'Syne', sans-serif; font-size: 1.6rem; margin-bottom: 6px; }
+    .subtitle { color: var(--muted); font-size: 0.8rem; margin-bottom: 30px; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+    }
+    .stat-card .num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
+    .stat-card .lbl { color: var(--muted); font-size: 0.72rem; margin-top: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .stat-card.pending .num { color: #facc15; }
+    .stat-card.resolved .num { color: var(--success); }
+    .stat-card.users .num { color: var(--accent2); }
+
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 28px; overflow: hidden; }
+    .section-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .section-header h2 { font-family: 'Syne', sans-serif; font-size: 1rem; }
+
+    .filter-tabs { display: flex; gap: 6px; }
+    .ftab {
+      padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-family: 'DM Mono', monospace;
+      font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
+    }
+    .ftab.active { background: rgba(124,58,237,0.15); border-color: var(--accent); color: #c4b5fd; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 12px 20px; text-align: left; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    td { padding: 14px 20px; border-bottom: 1px solid rgba(30,30,46,0.5); font-size: 0.82rem; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(124,58,237,0.03); }
+
+    .badge {
+      display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.68rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .badge.pending { background: rgba(234,179,8,0.15); color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
+    .badge.resolved { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+    .badge.dismissed { background: rgba(107,107,138,0.15); color: var(--muted); border: 1px solid rgba(107,107,138,0.3); }
+
+    .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .act-btn {
+      padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace;
+      font-size: 0.72rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .act-btn:hover { border-color: var(--accent); }
+    .act-btn.ban { border-color: rgba(239,68,68,0.3); color: #f87171; }
+    .act-btn.ban:hover { background: rgba(239,68,68,0.1); }
+    .act-btn.resolve { border-color: rgba(34,197,94,0.3); color: var(--success); }
+    .act-btn.resolve:hover { background: rgba(34,197,94,0.1); }
+
+    .report-reason { color: var(--text); }
+    .report-notes-text { color: var(--muted); font-size: 0.75rem; margin-top: 4px; font-style: italic; }
+    .meta { color: var(--muted); font-size: 0.72rem; }
+
+    /* USER MGMT */
+    .user-search { display: flex; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .user-search input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 12px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.85rem; outline: none;
+    }
+    .user-search input:focus { border-color: var(--accent); }
+    .search-btn {
+      padding: 9px 18px; border-radius: 8px; border: none;
+      background: var(--accent); color: white; font-family: 'DM Mono', monospace;
+      font-size: 0.82rem; cursor: pointer;
+    }
+
+    .role-select {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.75rem; padding: 4px 8px; outline: none;
+    }
+
+    .empty { padding: 40px; text-align: center; color: var(--muted); font-size: 0.85rem; }
+    .loading { padding: 40px; text-align: center; color: var(--muted); font-size: 0.8rem; }
+
+    #access-denied { display: none; text-align: center; padding: 80px 20px; }
+    #access-denied h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; color: var(--danger); margin-bottom: 10px; }
+    #access-denied p { color: var(--muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="logo-sm">RandomChat Staff</span>
+    <a class="back-btn" href="chat.html">← Back to Chat</a>
+  </header>
+
+  <div id="access-denied">
+    <h2>Access Denied</h2>
+    <p>You don't have permission to view this page.</p>
+  </div>
+
+  <div class="container" id="panel-content" style="display:none">
+    <h1>Staff Panel</h1>
+    <p class="subtitle" id="panel-subtitle">Loading...</p>
+
+    <div class="stats">
+      <div class="stat-card pending"><div class="num" id="stat-pending">—</div><div class="lbl">Pending Reports</div></div>
+      <div class="stat-card resolved"><div class="num" id="stat-resolved">—</div><div class="lbl">Resolved</div></div>
+      <div class="stat-card users"><div class="num" id="stat-users">—</div><div class="lbl">Total Users</div></div>
+    </div>
+
+    <!-- Reports -->
+    <div class="section">
+      <div class="section-header">
+        <h2>📋 Reports</h2>
+        <div class="filter-tabs">
+          <button class="ftab active" onclick="filterReports('pending')">Pending</button>
+          <button class="ftab" onclick="filterReports('all')">All</button>
+          <button class="ftab" onclick="filterReports('resolved')">Resolved</button>
+        </div>
+      </div>
+      <div id="reports-container"><div class="loading">Loading reports...</div></div>
+    </div>
+
+    <!-- User Management (admin+ only) -->
+    <div class="section" id="user-section">
+      <div class="section-header"><h2>👥 User Management</h2></div>
+      <div class="user-search">
+        <input type="text" id="user-search-input" placeholder="Search by email or username..." />
+        <button class="search-btn" onclick="searchUsers()">Search</button>
+      </div>
+      <div id="users-container"><div class="loading">Search for a user above.</div></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, getDocs, updateDoc, collection,
+      query, where, orderBy, limit, serverTimestamp, getCountFromServer
+    } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    import { firebaseConfig } from "./js/config.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const STAFF_ROLES = ["moderator", "admin", "manager", "founder"];
+    const ADMIN_ROLES = ["admin", "manager", "founder"];
+    let currentUserData = null;
+    let allReports = [];
+    let currentFilter = "pending";
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = "index.html"; return; }
+      const snap = await getDoc(doc(db, "users", user.uid));
+      currentUserData = snap.exists() ? snap.data() : null;
+
+      if (!currentUserData || !STAFF_ROLES.includes(currentUserData.role)) {
+        document.getElementById("access-denied").style.display = "block";
+        return;
+      }
+
+      document.getElementById("panel-content").style.display = "block";
+      document.getElementById("panel-subtitle").textContent =
+        `Logged in as ${currentUserData.displayName} · Role: ${currentUserData.role.toUpperCase()}`;
+
+      if (!ADMIN_ROLES.includes(currentUserData.role)) {
+        document.getElementById("user-section").style.display = "none";
+      }
+
+      await loadStats();
+      await loadReports();
+    });
+
+    async function loadStats() {
+      const pendingSnap = await getCountFromServer(query(collection(db, "reports"), where("status", "==", "pending")));
+      const resolvedSnap = await getCountFromServer(query(collection(db, "reports"), where("status", "==", "resolved")));
+      const usersSnap = await getCountFromServer(collection(db, "users"));
+      document.getElementById("stat-pending").textContent = pendingSnap.data().count;
+      document.getElementById("stat-resolved").textContent = resolvedSnap.data().count;
+      document.getElementById("stat-users").textContent = usersSnap.data().count;
+    }
+
+    async function loadReports() {
+      let q;
+      if (currentFilter === "pending") {
+        q = query(collection(db, "reports"), where("status", "==", "pending"), orderBy("createdAt", "desc"), limit(50));
+      } else if (currentFilter === "resolved") {
+        q = query(collection(db, "reports"), where("status", "==", "resolved"), orderBy("createdAt", "desc"), limit(50));
+      } else {
+        q = query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(50));
+      }
+      const snap = await getDocs(q);
+      allReports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderReports();
+    }
+
+    function renderReports() {
+      const c = document.getElementById("reports-container");
+      if (allReports.length === 0) {
+        c.innerHTML = `<div class="empty">No ${currentFilter} reports.</div>`;
+        return;
+      }
+      c.innerHTML = `
+        <table>
+          <thead><tr>
+            <th>Reason</th><th>Reporter</th><th>Time</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody>
+            ${allReports.map(r => `
+              <tr>
+                <td>
+                  <div class="report-reason">${r.reason}</div>
+                  ${r.notes ? `<div class="report-notes-text">${r.notes}</div>` : ""}
+                </td>
+                <td class="meta">${r.reporterName || "—"}</td>
+                <td class="meta">${r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleString() : "—"}</td>
+                <td><span class="badge ${r.status}">${r.status}</span></td>
+                <td>
+                  <div class="action-btns">
+                    ${r.status === "pending" ? `
+                      <button class="act-btn resolve" onclick="updateReport('${r.id}', 'resolved')">✓ Resolve</button>
+                      <button class="act-btn" onclick="updateReport('${r.id}', 'dismissed')">✗ Dismiss</button>
+                    ` : ""}
+                  </div>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`;
+    }
+
+    window.filterReports = async (f) => {
+      currentFilter = f;
+      document.querySelectorAll(".ftab").forEach((t, i) => {
+        t.classList.toggle("active", ["pending","all","resolved"][i] === f);
+      });
+      await loadReports();
+    };
+
+    window.updateReport = async (id, status) => {
+      await updateDoc(doc(db, "reports", id), {
+        status,
+        resolvedBy: currentUserData.displayName,
+        resolvedAt: serverTimestamp(),
+      });
+      await loadStats();
+      await loadReports();
+    };
+
+    window.searchUsers = async () => {
+      const query_str = document.getElementById("user-search-input").value.trim().toLowerCase();
+      if (!query_str) return;
+      const snap = await getDocs(collection(db, "users"));
+      const results = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(u =>
+          (u.email && u.email.toLowerCase().includes(query_str)) ||
+          (u.displayName && u.displayName.toLowerCase().includes(query_str))
+        );
+      renderUsers(results);
+    };
+
+    function renderUsers(users) {
+      const c = document.getElementById("users-container");
+      if (users.length === 0) { c.innerHTML = `<div class="empty">No users found.</div>`; return; }
+      c.innerHTML = `
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${users.map(u => `
+              <tr>
+                <td>${u.displayName || "—"}</td>
+                <td class="meta">${u.email || u.phone || "—"}</td>
+                <td>
+                  <select class="role-select" onchange="updateRole('${u.id}', this.value)" ${currentUserData.role !== "founder" && currentUserData.role !== "manager" ? "disabled" : ""}>
+                    ${["user","vip","moderator","admin","manager","founder"].map(r =>
+                      `<option value="${r}" ${u.role === r ? "selected" : ""}>${r}</option>`
+                    ).join("")}
+                  </select>
+                </td>
+                <td><span class="badge ${u.banned ? 'pending' : 'resolved'}">${u.banned ? "banned" : "active"}</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="act-btn ban" onclick="toggleBan('${u.id}', ${!u.banned})">${u.banned ? "Unban" : "Ban"}</button>
+                  </div>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`;
+    }
+
+    window.updateRole = async (uid, role) => {
+      await updateDoc(doc(db, "users", uid), { role });
+    };
+
+    window.toggleBan = async (uid, ban) => {
+      await updateDoc(doc(db, "users", uid), { banned: ban });
+      searchUsers();
+    };
+  </script>
+</body>
+</html>
