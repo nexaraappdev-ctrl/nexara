@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) =>
-  res.json({ status: "RandomChat backend running" })
+  res.json({ status: "Nexara backend running" })
 );
 
 // --- Matchmaking queue ---

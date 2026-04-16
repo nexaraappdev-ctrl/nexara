@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RandomChat — Connect</title>
+  <title>Nexara — Connect</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
@@ -198,7 +198,7 @@
 
   <div class="container">
     <div class="logo">
-      <h1>RandomChat</h1>
+      <h1>Nexara</h1>
       <p>MEET SOMEONE NEW</p>
     </div>
 
@@ -359,20 +359,33 @@
       }
     };
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const data = await ensureUserDoc(user);
-        if (data.banned) {
-          showMsg("Your account has been banned.", "error");
-          auth.signOut();
-          return;
-        }
-        window.location.href = "chat.html";
-      }
-    });
+onAuthStateChanged(auth, async (user) => {
+  // If not logged in, do nothing (stay on login page)
+  if (!user) return;
+
+  try {
+    const data = await ensureUserDoc(user);
+
+    // If banned → kick them out
+    if (data.banned) {
+      showMsg("Your account has been banned.", "error");
+      await auth.signOut();
+      return;
+    }
+
+    // Only redirect once (prevents looping)
+    if (
+      window.location.pathname.endsWith("index.html") ||
+      window.location.pathname === "/" ||
+      window.location.pathname === ""
+    ) {
+      window.location.href = "chat.html";
+    }
+
+  } catch (err) {
+    console.error("Auth redirect error:", err);
+  }
+});
   </script>
-<script>
-  window.location.href = "chat.html";
-</script>
 </body>
 </html>

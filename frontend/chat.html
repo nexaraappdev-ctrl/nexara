@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RandomChat</title>
+  <title>Nexara</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -175,7 +175,7 @@
 </head>
 <body>
   <header>
-    <span class="logo-sm">RandomChat</span>
+    <span class="logo-sm">Nexara</span>
     <div class="header-right">
       <span class="role-badge role-user" id="role-display">user</span>
       <span id="user-name" style="font-size:0.8rem;color:var(--muted)"></span>
@@ -249,7 +249,7 @@
   <div class="modal-overlay" id="signout-modal">
     <div class="modal">
       <h3>Sign Out?</h3>
-      <p>Are you sure you want to sign out of RandomChat?</p>
+      <p>Are you sure you want to sign out of Nexara?</p>
       <div class="modal-btns">
         <button onclick="closeModal()">Cancel</button>
         <button class="confirm" onclick="confirmSignOut()">Sign Out</button>
@@ -279,8 +279,15 @@
     const ICE_SERVERS = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
     // --- Auth ---
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) { window.location.href = "index.html"; return; }
+let authReady = false;
+
+onAuthStateChanged(auth, async (user) => {
+  authReady = true;
+
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
       currentUser = user;
       const snap = await getDoc(doc(db, "users", user.uid));
       userData = snap.exists() ? snap.data() : { role: "user", displayName: user.displayName || "User" };
@@ -388,50 +395,73 @@ function initSocket() {
       document.getElementById("remote-video").srcObject = null;
     }
 
-    // --- Controls ---
-    window.startChat = async () => {
-      document.getElementById("start-btn").classList.add("hidden");
-      document.getElementById("next-btn").classList.remove("hidden");
-      document.getElementById("cam-btn").classList.remove("hidden");
-      document.getElementById("mic-btn").classList.remove("hidden");
-      document.getElementById("screen-btn").classList.remove("hidden");
+// --- Controls ---
 
-      try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        document.getElementById("local-video").srcObject = localStream;
-        document.getElementById("local-status").classList.add("hidden");
-      } catch (e) {
-        addSysMsg("Camera/mic denied — connecting without.");
-        localStream = null;
-      }
-      socket.emit("find-partner", { uid: currentUser.uid, displayName: userData.displayName });
-    };
+window.startChat = async () => {
+  if (!authReady || !socket || !currentUser || !userData) {
+    addSysMsg("Still loading... try again in a second.");
+    return;
+  }
 
-    window.nextPartner = () => {
-      addSysMsg("Looking for next person...");
-      socket.emit("skip");
-      if (partnerId) partnerId = null;
-      socket.emit("find-partner", { uid: currentUser.uid, displayName: userData.displayName });
-    };
+  document.getElementById("start-btn").classList.add("hidden");
+  document.getElementById("next-btn").classList.remove("hidden");
+  document.getElementById("cam-btn").classList.remove("hidden");
+  document.getElementById("mic-btn").classList.remove("hidden");
+  document.getElementById("screen-btn").classList.remove("hidden");
 
-    window.toggleCamera = async () => {
-      if (!localStream) return;
-      camOn = !camOn;
-      localStream.getVideoTracks().forEach(t => t.enabled = camOn);
-      const btn = document.getElementById("cam-btn");
-      btn.classList.toggle("muted", !camOn);
-      btn.textContent = camOn ? "📷 Camera" : "📷 Off";
-      document.getElementById("local-status").classList.toggle("hidden", camOn);
-    };
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    document.getElementById("local-video").srcObject = localStream;
+    document.getElementById("local-status").classList.add("hidden");
+  } catch (e) {
+    addSysMsg("Camera/mic denied — connecting without.");
+    localStream = null;
+  }
 
-    window.toggleMic = () => {
-      if (!localStream) return;
-      micOn = !micOn;
-      localStream.getAudioTracks().forEach(t => t.enabled = micOn);
-      const btn = document.getElementById("mic-btn");
-      btn.classList.toggle("muted", !micOn);
-      btn.textContent = micOn ? "🎙 Mic" : "🎙 Off";
-    };
+  socket.emit("find-partner", {
+    uid: currentUser.uid,
+    displayName: userData.displayName
+  });
+};
+
+window.nextPartner = () => {
+  addSysMsg("Looking for next person...");
+  socket.emit("skip");
+
+  partnerId = null;
+
+  document.getElementById("remote-video").srcObject = null;
+  document.getElementById("remote-label").textContent = "Stranger";
+  document.getElementById("remote-status").classList.remove("hidden");
+
+  socket.emit("find-partner", {
+    uid: currentUser.uid,
+    displayName: userData.displayName
+  });
+};
+window.toggleCamera = () => {
+  if (!localStream) return;
+
+  camOn = !camOn;
+  localStream.getVideoTracks().forEach(t => t.enabled = camOn);
+
+  const btn = document.getElementById("cam-btn");
+  btn.classList.toggle("muted", !camOn);
+  btn.textContent = camOn ? "📷 Camera" : "📷 Off";
+
+  document.getElementById("local-status").classList.toggle("hidden", camOn);
+};
+
+window.toggleMic = () => {
+  if (!localStream) return;
+
+  micOn = !micOn;
+  localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+
+  const btn = document.getElementById("mic-btn");
+  btn.classList.toggle("muted", !micOn);
+  btn.textContent = micOn ? "🎙 Mic" : "🎙 Off";
+};
 
     window.toggleScreen = async () => {
       if (!pc) return;
