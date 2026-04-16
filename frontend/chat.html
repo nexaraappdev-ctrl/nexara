@@ -4,167 +4,704 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nexara</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
   <style>
-    /* (UNCHANGED CSS — you already had it correct) */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #0a0a0f; --surface: #12121a; --border: #1e1e2e;
       --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e2f0;
       --muted: #6b6b8a; --danger: #ef4444; --success: #22c55e;
     }
-    body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
     header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 20px; border-bottom: 1px solid var(--border);
-      background: var(--surface); flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+      gap: 12px;
     }
 
     .logo-sm {
-      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.2rem;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    .main { display: flex; flex: 1; overflow: hidden; }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #user-name {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .icon-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--accent); }
+
+    /* ── Main layout ── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Video Area ── */
+    .video-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    .videos {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .video-box {
+      position: relative;
+      background: #0d0d14;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-label {
+      position: absolute;
+      bottom: 8px;
+      left: 10px;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.6);
+      background: rgba(0,0,0,0.4);
+      padding: 2px 8px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .role-badge {
+      font-size: 0.6rem;
+      padding: 1px 6px;
+      border-radius: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .role-founder  { background: rgba(250,204,21,0.2); color: #facc15; }
+    .role-manager  { background: rgba(249,115,22,0.2); color: #f97316; }
+    .role-admin    { background: rgba(239,68,68,0.2);  color: #f87171; }
+    .role-moderator{ background: rgba(59,130,246,0.2); color: #60a5fa; }
+    .role-vip      { background: rgba(168,85,247,0.2); color: #c084fc; }
+
+    .no-cam-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      height: 100%;
+      min-height: 120px;
+    }
+    .no-cam-placeholder span { font-size: 2rem; }
+
+    /* ── Controls bar ── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    #waiting-text {
+      font-size: 0.8rem;
+      color: var(--muted);
+      flex: 1;
+    }
+
+    .ctrl-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-start  { background: linear-gradient(135deg, var(--accent), #5b21b6); color: #fff; }
+    .btn-next   { background: rgba(6,182,212,0.15); color: var(--accent2); border: 1px solid rgba(6,182,212,0.3); }
+    .btn-toggle { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-toggle.off { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.08); }
+    .btn-screen { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-screen.active { border-color: var(--accent2); color: var(--accent2); background: rgba(6,182,212,0.08); }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 300px;
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .side-tab {
+      flex: 1;
+      padding: 12px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .side-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+    /* ── Chat panel ── */
+    #chat-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .msg-bubble {
+      max-width: 85%;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+    .msg-bubble.mine {
+      align-self: flex-end;
+      background: rgba(124,58,237,0.2);
+      border: 1px solid rgba(124,58,237,0.3);
+    }
+    .msg-bubble.theirs {
+      align-self: flex-start;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+    .msg-bubble .sender {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .msg-system {
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+      padding: 4px 0;
+      font-style: italic;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+    }
+    #chat-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      outline: none;
+    }
+    #chat-input:focus { border-color: var(--accent); }
+    #chat-input::placeholder { color: var(--muted); }
+    #send-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+    }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Report panel ── */
+    #report-panel {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .report-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .reason-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .reason-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reason-btn:hover, .reason-btn.selected {
+      border-color: var(--accent);
+      background: rgba(124,58,237,0.1);
+      color: var(--accent);
+    }
+
+    #report-notes {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+    }
+    #report-notes:focus { border-color: var(--accent); }
+
+    #submit-report {
+      padding: 10px;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      color: #f87171;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    #submit-report:hover { background: rgba(239,68,68,0.25); }
+    #submit-report:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #report-msg {
+      font-size: 0.75rem;
+      text-align: center;
+      padding: 6px;
+      border-radius: 6px;
+    }
+    #report-msg.ok  { background: rgba(34,197,94,0.1); color: var(--success); }
+    #report-msg.err { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 320px;
+      width: 90%;
+      text-align: center;
+    }
+    .modal h3 { font-family: 'Syne', sans-serif; margin-bottom: 10px; }
+    .modal p { color: var(--muted); font-size: 0.8rem; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: center; }
+    .modal-btns button {
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      border: none;
+    }
+    #confirm-signout { background: var(--danger); color: white; }
+    #cancel-signout  { background: var(--bg); border: 1px solid var(--border) !important; color: var(--text); }
 
     .hidden { display: none !important; }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .sidebar { width: 240px; }
+      .videos { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+    }
+    @media (max-width: 500px) {
+      .main { flex-direction: column; }
+      .sidebar { width: 100%; height: 280px; border-left: none; border-top: 1px solid var(--border); }
+    }
   </style>
 </head>
 
 <body>
 <header>
   <span class="logo-sm">Nexara</span>
-  <div>
+  <div class="header-right">
     <span id="user-name"></span>
-    <button onclick="signOut()">🚪</button>
+    <button class="icon-btn" id="admin-btn" style="display:none" onclick="location.href='admin.html'">⚙ Staff</button>
+    <button class="icon-btn" onclick="openSignoutModal()">🚪</button>
   </div>
 </header>
 
 <div class="main">
 
+  <!-- Video Area -->
   <div class="video-area">
     <div class="videos">
-      <div class="video-box">
-        <video id="local-video" autoplay muted playsinline></video>
+      <div class="video-box" id="local-box">
+        <div class="no-cam-placeholder" id="local-placeholder">
+          <span>📷</span><p>Camera off</p>
+        </div>
+        <video id="local-video" autoplay muted playsinline style="display:none"></video>
+        <div class="video-label" id="local-label">You</div>
       </div>
 
-      <div class="video-box">
-        <video id="remote-video" autoplay playsinline></video>
+      <div class="video-box" id="remote-box">
+        <div class="no-cam-placeholder" id="remote-placeholder">
+          <span>👤</span><p>Waiting…</p>
+        </div>
+        <video id="remote-video" autoplay playsinline style="display:none"></video>
+        <div class="video-label" id="remote-label">Stranger</div>
       </div>
     </div>
 
     <div class="controls">
-      <span id="waiting-text">Press Start</span>
-      <button id="start-btn" onclick="startChat()">Start</button>
-      <button id="next-btn" class="hidden" onclick="nextPartner()">Next</button>
-      <button id="cam-btn" class="hidden" onclick="toggleCamera()">Cam</button>
-      <button id="mic-btn" class="hidden" onclick="toggleMic()">Mic</button>
-      <button id="screen-btn" class="hidden" onclick="toggleScreen()">Screen</button>
+      <span id="waiting-text">Press Start to find someone</span>
+      <button class="ctrl-btn btn-start" id="start-btn" onclick="startChat()">▶ Start</button>
+      <button class="ctrl-btn btn-next  hidden" id="next-btn"   onclick="nextPartner()">⏭ Next</button>
+      <button class="ctrl-btn btn-toggle hidden" id="cam-btn"   onclick="toggleCamera()">📷 Cam</button>
+      <button class="ctrl-btn btn-toggle hidden" id="mic-btn"   onclick="toggleMic()">🎙 Mic</button>
+      <button class="ctrl-btn btn-screen hidden" id="screen-btn" onclick="toggleScreen()">🖥 Share</button>
     </div>
   </div>
 
+  <!-- Sidebar -->
   <div class="sidebar">
-    <button onclick="showPanel('chat')">Chat</button>
-    <button onclick="showPanel('report')">Report</button>
-
-    <div id="chat-panel">
-      <div id="messages"></div>
-      <input id="chat-input" onkeydown="onChatKey(event)" />
-      <button onclick="sendMessage()">Send</button>
+    <div class="sidebar-tabs">
+      <button class="side-tab active" id="tab-chat"   onclick="showPanel('chat')">💬 Chat</button>
+      <button class="side-tab"        id="tab-report" onclick="showPanel('report')">🚩 Report</button>
     </div>
 
+    <!-- Chat panel -->
+    <div id="chat-panel">
+      <div id="messages">
+        <div class="msg-system">Connect with someone to start chatting.</div>
+      </div>
+      <div class="chat-input-row">
+        <input id="chat-input" placeholder="Say something…" onkeydown="onChatKey(event)" />
+        <button id="send-btn" onclick="sendMessage()" disabled>➤</button>
+      </div>
+    </div>
+
+    <!-- Report panel -->
     <div id="report-panel" class="hidden">
-      <button onclick="selectReason(this,'Spam')">Spam</button>
-      <button onclick="selectReason(this,'Harassment')">Harassment</button>
-      <textarea id="report-notes"></textarea>
-      <button onclick="submitReport()">Submit</button>
+      <div class="report-label">Reason</div>
+      <div class="reason-btns">
+        <button class="reason-btn" onclick="selectReason(this,'Spam')">Spam</button>
+        <button class="reason-btn" onclick="selectReason(this,'Harassment')">Harassment</button>
+        <button class="reason-btn" onclick="selectReason(this,'Nudity')">Nudity</button>
+        <button class="reason-btn" onclick="selectReason(this,'Hate speech')">Hate speech</button>
+        <button class="reason-btn" onclick="selectReason(this,'Other')">Other</button>
+      </div>
+      <div class="report-label" style="margin-top:8px">Notes (optional)</div>
+      <textarea id="report-notes" placeholder="Additional details…"></textarea>
+      <button id="submit-report" onclick="submitReport()">Submit Report</button>
+      <div id="report-msg"></div>
     </div>
   </div>
-
 </div>
 
-<div id="signout-modal" class="hidden">
-  <button onclick="confirmSignOut()">Confirm Sign Out</button>
-  <button onclick="closeModal()">Cancel</button>
+<!-- Sign-out modal -->
+<div class="modal-overlay hidden" id="signout-modal">
+  <div class="modal">
+    <h3>Sign out?</h3>
+    <p>You'll be disconnected from any active chat.</p>
+    <div class="modal-btns">
+      <button id="confirm-signout" onclick="confirmSignOut()">Sign out</button>
+      <button id="cancel-signout"  onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut as fbSignOut }
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, addDoc, collection, serverTimestamp }
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 import { firebaseConfig, BACKEND_URL } from "./js/config.js";
 
-/* ---------------- FIREBASE ---------------- */
-const app = initializeApp(firebaseConfig);
+/* ─────────────── FIREBASE ─────────────── */
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db   = getFirestore(app);
 
-let currentUser = null;
-let userData = null;
-let socket = null;
-let pc = null;
-let localStream = null;
-let partnerId = null;
-let partnerName = "Stranger";
+/* ─────────────── STATE ─────────────── */
+let currentUser  = null;
+let userData     = null;
+let socket       = null;
+let pc           = null;
+let localStream  = null;   // camera/mic stream
+let screenStream = null;   // screen share stream
+let partnerId    = null;
+let partnerName  = "Stranger";
 let selectedReason = "";
-let camOn = true;
-let micOn = true;
+let camOn        = true;
+let micOn        = true;
 let screenSharing = false;
 
 const ICE_SERVERS = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ]
 };
 
-let authReady = false;
+const STAFF_ROLES = ["moderator","admin","manager","founder"];
+const BADGE_ROLES = ["vip","moderator","admin","manager","founder"];
 
-/* ---------------- AUTH ---------------- */
+/* ─────────────── DOM HELPERS ─────────────── */
+const $ = id => document.getElementById(id);
+
+function setHidden(el, hide) {
+  if (typeof el === "string") el = $(el);
+  el.classList.toggle("hidden", hide);
+}
+
+function systemMsg(text) {
+  const div = document.createElement("div");
+  div.className = "msg-system";
+  div.textContent = text;
+  $("messages").appendChild(div);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+
+function roleBadgeHtml(role) {
+  if (!BADGE_ROLES.includes(role)) return "";
+  return `<span class="role-badge role-${role}">${role}</span>`;
+}
+
+/* ─────────────── AUTH ─────────────── */
 onAuthStateChanged(auth, async (user) => {
-  authReady = true;
-  if (!user) return (window.location.href = "index.html");
+  if (!user) return (location.href = "index.html");
 
   currentUser = user;
+  const snap  = await getDoc(doc(db, "users", user.uid));
+  userData    = snap.exists()
+    ? snap.data()
+    : { role: "user", displayName: user.displayName || "User" };
 
-  const snap = await getDoc(doc(db, "users", user.uid));
-  userData = snap.exists() ? snap.data() : { role: "user", displayName: "User" };
+  if (userData.banned) {
+    await fbSignOut(auth);
+    return (location.href = "index.html");
+  }
 
-  document.getElementById("user-name").textContent = userData.displayName;
+  $("user-name").textContent = userData.displayName;
+
+  // Show my own role badge in the local video label
+  const myBadge = roleBadgeHtml(userData.role);
+  $("local-label").innerHTML = `You ${myBadge}`;
+
+  // Show staff panel button if applicable
+  if (STAFF_ROLES.includes(userData.role)) {
+    $("admin-btn").style.display = "inline";
+  }
 
   initSocket();
 });
 
-/* ---------------- SOCKET ---------------- */
+/* ─────────────── SOCKET ─────────────── */
 function initSocket() {
-  socket = window.io(BACKEND_URL);
+  socket = window.io(BACKEND_URL, { transports: ["websocket","polling"] });
 
-  socket.on("matched", async ({ partnerId: pid }) => {
-    partnerId = pid;
-    document.getElementById("waiting-text").textContent = "Connected";
-    await setupPeer(true);
+  socket.on("connect", () => console.log("Socket connected:", socket.id));
+  socket.on("connect_error", err => console.error("Socket error:", err));
+
+  /* ── Matched ── */
+  socket.on("matched", async ({ partnerId: pid, initiator, partnerName: pName }) => {
+    partnerId   = pid;
+    partnerName = pName || "Stranger";
+
+    // Fetch partner Firestore doc to get their role
+    let partnerRole = "";
+    try {
+      // We don't have partner UID directly, but server could pass it.
+      // partnerName will show; role badge only if server sends uid.
+      // For now show name; role badge shown if partnerData arrives via custom event.
+    } catch(e) {}
+
+    $("waiting-text").textContent = `Connected to ${partnerName}`;
+    $("remote-placeholder").querySelector("p").textContent = partnerName;
+    $("remote-label").innerHTML = partnerName + (partnerRole ? ` ${roleBadgeHtml(partnerRole)}` : "");
+
+    $("send-btn").disabled = false;
+    systemMsg(`You are now chatting with ${partnerName}.`);
+
+    await setupPeer(initiator);
+  });
+
+  /* ── WebRTC signal ── */
+  socket.on("signal", async ({ from, data }) => {
+    if (!pc) await setupPeer(false);
+
+    try {
+      if (data.type === "offer") {
+        await pc.setRemoteDescription(new RTCSessionDescription(data));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit("signal", { to: from, data: answer });
+
+      } else if (data.type === "answer") {
+        await pc.setRemoteDescription(new RTCSessionDescription(data));
+
+      } else if (data.candidate) {
+        await pc.addIceCandidate(new RTCIceCandidate(data));
+      }
+    } catch (err) {
+      console.warn("Signal handling error:", err);
+    }
+  });
+
+  /* ── Incoming chat message ── */
+  socket.on("chat-message", ({ message, displayName }) => {
+    appendMessage(displayName || "Stranger", message, false);
+  });
+
+  /* ── Waiting ── */
+  socket.on("waiting", () => {
+    $("waiting-text").textContent = "Looking for someone…";
+    systemMsg("Searching for a partner…");
+  });
+
+  /* ── Skipped (ack) ── */
+  socket.on("skipped", () => {
+    $("waiting-text").textContent = "Looking for someone…";
+  });
+
+  /* ── Partner disconnected / skipped you ── */
+  socket.on("partner-disconnected", () => {
+    systemMsg(`${partnerName} disconnected.`);
+    partnerId   = null;
+    partnerName = "Stranger";
+    $("waiting-text").textContent = "Partner left. Press Next or Start again.";
+    $("send-btn").disabled = true;
+    $("remote-video").srcObject = null;
+    $("remote-video").style.display = "none";
+    $("remote-placeholder").querySelector("span").textContent = "👤";
+    $("remote-placeholder").querySelector("p").textContent = "Waiting…";
+    $("remote-placeholder").style.display = "flex";
+    $("remote-label").textContent = "Stranger";
+    closePeer();
   });
 }
 
-/* ---------------- PEER ---------------- */
+/* ─────────────── PEER ─────────────── */
 async function setupPeer(initiator) {
+  closePeer();
   pc = new RTCPeerConnection(ICE_SERVERS);
 
+  /* Remote track → remote video */
   pc.ontrack = (e) => {
-    document.getElementById("remote-video").srcObject = e.streams[0];
+    const video = $("remote-video");
+    video.srcObject = e.streams[0];
+    video.style.display = "block";
+    $("remote-placeholder").style.display = "none";
   };
 
+  /* ICE candidate → signal */
   pc.onicecandidate = (e) => {
-    if (e.candidate) {
+    if (e.candidate && partnerId) {
       socket.emit("signal", { to: partnerId, data: e.candidate });
     }
   };
 
+  pc.oniceconnectionstatechange = () => {
+    if (["disconnected","failed","closed"].includes(pc.iceConnectionState)) {
+      systemMsg("Connection lost.");
+    }
+  };
+
+  /* Add local tracks */
   if (localStream) {
     localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
   }
@@ -176,65 +713,254 @@ async function setupPeer(initiator) {
   }
 }
 
-/* ---------------- START ---------------- */
+function closePeer() {
+  if (pc) { pc.close(); pc = null; }
+}
+
+/* ─────────────── START ─────────────── */
 window.startChat = async () => {
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    document.getElementById("local-video").srcObject = localStream;
-  } catch (e) {}
+  if (!socket) return;
+
+  // Get camera + mic if not already
+  if (!localStream) {
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const lv = $("local-video");
+      lv.srcObject = localStream;
+      lv.style.display = "block";
+      $("local-placeholder").style.display = "none";
+    } catch (e) {
+      systemMsg("Could not access camera/mic. Continuing without.");
+    }
+  }
+
+  setHidden("start-btn",  true);
+  setHidden("next-btn",   false);
+  setHidden("cam-btn",    false);
+  setHidden("mic-btn",    false);
+  setHidden("screen-btn", false);
 
   socket.emit("find-partner", {
     uid: currentUser.uid,
-    displayName: userData.displayName
+    displayName: userData.displayName,
+    role: userData.role
   });
 };
 
-/* ---------------- REQUIRED FIX (THIS WAS MISSING) ---------------- */
-window.showPanel = (panel) => {
-  document.getElementById("chat-panel").classList.toggle("hidden", panel !== "chat");
-  document.getElementById("report-panel").classList.toggle("hidden", panel !== "report");
+/* ─────────────── NEXT ─────────────── */
+window.nextPartner = () => {
+  if (!socket) return;
+  closePeer();
+
+  if (partnerId) {
+    socket.emit("skip");
+    partnerId = null;
+    partnerName = "Stranger";
+  }
+
+  $("remote-video").srcObject = null;
+  $("remote-video").style.display = "none";
+  $("remote-placeholder").querySelector("span").textContent = "👤";
+  $("remote-placeholder").querySelector("p").textContent = "Waiting…";
+  $("remote-placeholder").style.display = "flex";
+  $("remote-label").textContent = "Stranger";
+  $("send-btn").disabled = true;
+  $("waiting-text").textContent = "Looking for someone…";
+
+  // Stop screen share if active when skipping
+  if (screenSharing) stopScreenShare();
+
+  socket.emit("find-partner", {
+    uid: currentUser.uid,
+    displayName: userData.displayName,
+    role: userData.role
+  });
 };
 
-/* ---------------- CHAT ---------------- */
+/* ─────────────── CAMERA TOGGLE ─────────────── */
+window.toggleCamera = () => {
+  if (!localStream) return;
+  const track = localStream.getVideoTracks()[0];
+  if (!track) return;
+  camOn = !camOn;
+  track.enabled = camOn;
+  const btn = $("cam-btn");
+  btn.textContent = camOn ? "📷 Cam" : "📷 Cam";
+  btn.classList.toggle("off", !camOn);
+  $("local-video").style.display  = camOn ? "block" : "none";
+  $("local-placeholder").style.display = camOn ? "none"  : "flex";
+};
+
+/* ─────────────── MIC TOGGLE ─────────────── */
+window.toggleMic = () => {
+  if (!localStream) return;
+  const track = localStream.getAudioTracks()[0];
+  if (!track) return;
+  micOn = !micOn;
+  track.enabled = micOn;
+  const btn = $("mic-btn");
+  btn.textContent = micOn ? "🎙 Mic" : "🔇 Mic";
+  btn.classList.toggle("off", !micOn);
+};
+
+/* ─────────────── SCREEN SHARE ─────────────── */
+window.toggleScreen = async () => {
+  if (!screenSharing) {
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+
+      // Replace video track in peer connection
+      if (pc) {
+        const screenTrack = screenStream.getVideoTracks()[0];
+        const sender = pc.getSenders().find(s => s.track && s.track.kind === "video");
+        if (sender) await sender.replaceTrack(screenTrack);
+      }
+
+      // Show screen in local video
+      $("local-video").srcObject = screenStream;
+      $("local-video").style.display = "block";
+      $("local-placeholder").style.display = "none";
+
+      screenSharing = true;
+      $("screen-btn").classList.add("active");
+      $("screen-btn").textContent = "🖥 Stop";
+
+      // Auto-stop when user clicks browser's "Stop sharing"
+      screenStream.getVideoTracks()[0].onended = () => stopScreenShare();
+
+    } catch (e) {
+      console.warn("Screen share cancelled or failed:", e);
+    }
+  } else {
+    stopScreenShare();
+  }
+};
+
+async function stopScreenShare() {
+  if (!screenSharing) return;
+  screenSharing = false;
+
+  if (screenStream) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+  }
+
+  // Restore camera track
+  if (pc && localStream) {
+    const camTrack = localStream.getVideoTracks()[0];
+    const sender   = pc.getSenders().find(s => s.track && s.track.kind === "video");
+    if (sender && camTrack) await sender.replaceTrack(camTrack);
+  }
+
+  // Restore local video preview
+  if (localStream && camOn) {
+    $("local-video").srcObject = localStream;
+    $("local-video").style.display = "block";
+    $("local-placeholder").style.display = "none";
+  } else {
+    $("local-video").style.display = "none";
+    $("local-placeholder").style.display = "flex";
+  }
+
+  $("screen-btn").classList.remove("active");
+  $("screen-btn").textContent = "🖥 Share";
+}
+
+/* ─────────────── CHAT ─────────────── */
+function appendMessage(sender, message, isMine) {
+  const wrap = document.createElement("div");
+  wrap.className = `msg-bubble ${isMine ? "mine" : "theirs"}`;
+  wrap.innerHTML = `<div class="sender">${sender}</div><div>${escapeHtml(message)}</div>`;
+  $("messages").appendChild(wrap);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
 window.sendMessage = () => {
-  const input = document.getElementById("chat-input");
-  if (!input.value || !partnerId) return;
+  const input = $("chat-input");
+  const msg   = input.value.trim();
+  if (!msg || !partnerId) return;
 
   socket.emit("chat-message", {
     to: partnerId,
-    message: input.value
+    message: msg,
+    displayName: userData.displayName
   });
 
+  appendMessage("You", msg, true);
   input.value = "";
 };
 
 window.onChatKey = (e) => {
-  if (e.key === "Enter") sendMessage();
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 };
 
-/* ---------------- REPORT ---------------- */
+/* ─────────────── REPORT ─────────────── */
+window.showPanel = (panel) => {
+  setHidden("chat-panel",   panel !== "chat");
+  setHidden("report-panel", panel !== "report");
+  $("tab-chat").classList.toggle("active",   panel === "chat");
+  $("tab-report").classList.toggle("active", panel === "report");
+};
+
 window.selectReason = (btn, reason) => {
+  document.querySelectorAll(".reason-btn").forEach(b => b.classList.remove("selected"));
+  btn.classList.add("selected");
   selectedReason = reason;
 };
 
 window.submitReport = async () => {
-  await addDoc(collection(db, "reports"), {
-    reporterId: currentUser.uid,
-    reportedUserId: partnerId,
-    reason: selectedReason,
-    notes: document.getElementById("report-notes").value,
-    createdAt: serverTimestamp()
-  });
+  if (!partnerId) {
+    $("report-msg").textContent = "No active partner to report.";
+    $("report-msg").className = "err";
+    return;
+  }
+  if (!selectedReason) {
+    $("report-msg").textContent = "Please select a reason.";
+    $("report-msg").className = "err";
+    return;
+  }
+
+  const btn = $("submit-report");
+  btn.disabled = true;
+  try {
+    await addDoc(collection(db, "reports"), {
+      reporterId:        currentUser.uid,
+      reporterName:      userData.displayName,
+      reportedSocketId:  partnerId,
+      reportedUserName:  partnerName,
+      reason:            selectedReason,
+      notes:             $("report-notes").value,
+      status:            "pending",
+      createdAt:         serverTimestamp()
+    });
+    $("report-msg").textContent = "Report submitted. Thank you.";
+    $("report-msg").className = "ok";
+    $("report-notes").value = "";
+    selectedReason = "";
+    document.querySelectorAll(".reason-btn").forEach(b => b.classList.remove("selected"));
+  } catch (e) {
+    $("report-msg").textContent = "Failed to submit report.";
+    $("report-msg").className = "err";
+  } finally {
+    btn.disabled = false;
+  }
 };
 
-/* ---------------- SIGN OUT ---------------- */
-window.signOut = () => document.getElementById("signout-modal").classList.remove("hidden");
-
-window.closeModal = () => document.getElementById("signout-modal").classList.add("hidden");
+/* ─────────────── SIGN OUT ─────────────── */
+window.openSignoutModal = () => $("signout-modal").classList.remove("hidden");
+window.closeModal       = () => $("signout-modal").classList.add("hidden");
 
 window.confirmSignOut = async () => {
+  closePeer();
+  if (localStream)  localStream.getTracks().forEach(t => t.stop());
+  if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+  if (socket) socket.disconnect();
   await fbSignOut(auth);
-  window.location.href = "index.html";
+  location.href = "index.html";
 };
 </script>
 
