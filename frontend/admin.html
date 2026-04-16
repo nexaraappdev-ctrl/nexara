@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Nexara — Staff Panel</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -15,285 +13,465 @@
       --muted:#6b6b8a; --danger:#ef4444; --success:#22c55e;
     }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-    }
+    body { background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; min-height:100vh; }
 
     header {
       display:flex; justify-content:space-between; align-items:center;
-      padding:14px 28px;
-      background:var(--surface);
-      border-bottom:1px solid var(--border);
+      padding:14px 28px; background:var(--surface); border-bottom:1px solid var(--border);
     }
+    .logo { font-family:Syne; font-weight:800; font-size:1.2rem; }
+    .back-link { color:var(--muted); text-decoration:none; font-size:0.85rem; }
+    .back-link:hover { color:var(--text); }
 
-    .logo { font-family:Syne; font-weight:800; }
-
-    .container {
-      max-width:1100px;
-      margin:0 auto;
-      padding:30px 20px;
-    }
-
+    .container { max-width:1100px; margin:0 auto; padding:30px 20px; }
     h1 { font-family:Syne; margin-bottom:6px; }
-
-    .subtitle { color:var(--muted); font-size:0.8rem; margin-bottom:25px; }
+    .subtitle { color:var(--muted); font-size:0.8rem; margin-bottom:25px; display:flex; align-items:center; gap:8px; }
 
     .section {
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:12px;
-      margin-bottom:20px;
-      overflow:hidden;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:12px; margin-bottom:20px; overflow:hidden;
     }
-
     .section-header {
-      padding:16px;
-      border-bottom:1px solid var(--border);
-      display:flex;
-      justify-content:space-between;
+      padding:14px 16px; border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
     }
+    .section-header strong { font-family:Syne; font-size:1rem; }
 
     table { width:100%; border-collapse:collapse; }
+    th, td { padding:12px 14px; border-bottom:1px solid #1a1a25; font-size:0.8rem; text-align:left; }
+    th { color:var(--muted); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,0.02); }
 
-    th, td {
-      padding:12px;
-      border-bottom:1px solid #1a1a25;
-      font-size:0.8rem;
-      text-align:left;
+    .badge { padding:3px 10px; border-radius:20px; font-size:0.7rem; font-weight:600; }
+    .badge-pending   { background:rgba(250,204,21,0.15); color:#facc15; }
+    .badge-resolved  { background:rgba(34,197,94,0.15);  color:var(--success); }
+    .badge-dismissed { background:rgba(107,107,138,0.2); color:var(--muted); }
+
+    .role-badge { padding:2px 9px; border-radius:20px; font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; }
+    .role-founder   { background:rgba(250,204,21,0.2);  color:#facc15; }
+    .role-manager   { background:rgba(249,115,22,0.2);  color:#f97316; }
+    .role-admin     { background:rgba(239,68,68,0.2);   color:#f87171; }
+    .role-moderator { background:rgba(59,130,246,0.2);  color:#60a5fa; }
+    .role-vip       { background:rgba(168,85,247,0.2);  color:#c084fc; }
+    .role-user      { background:rgba(107,107,138,0.15);color:var(--muted); }
+
+    .action-btns { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    .btn {
+      cursor:pointer; border:none; padding:5px 11px; border-radius:6px;
+      font-size:0.74rem; font-family:inherit; transition:opacity 0.15s; white-space:nowrap;
+    }
+    .btn:hover   { opacity:0.8; }
+    .btn:disabled { opacity:0.35; cursor:not-allowed; }
+    .btn-resolve { background:rgba(34,197,94,0.2);   color:var(--success); }
+    .btn-dismiss { background:rgba(107,107,138,0.15);color:var(--muted); }
+    .btn-ban     { background:rgba(239,68,68,0.2);   color:#f87171; }
+    .btn-unban   { background:rgba(34,197,94,0.2);   color:var(--success); }
+    .btn-chats   { background:rgba(6,182,212,0.15);  color:var(--accent2); }
+    .btn-setrole { background:rgba(124,58,237,0.2);  color:#a78bfa; }
+    .btn-refresh { background:var(--bg); border:1px solid var(--border); color:var(--muted); padding:5px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem; font-family:inherit; }
+    .btn-search  { background:var(--accent); color:#fff; padding:9px 18px; border-radius:8px; cursor:pointer; border:none; font-family:inherit; font-size:0.85rem; }
+
+    select {
+      background:var(--bg); border:1px solid var(--border); color:var(--text);
+      padding:5px 8px; border-radius:6px; font-family:inherit; font-size:0.75rem;
     }
 
-    th { color:var(--muted); font-size:0.7rem; text-transform:uppercase; }
-
-    .badge {
-      padding:3px 8px;
-      border-radius:20px;
-      font-size:0.7rem;
+    .search-row { display:flex; gap:10px; padding:12px; border-bottom:1px solid var(--border); }
+    .search-row input {
+      flex:1; padding:9px 12px; background:var(--bg); border:1px solid var(--border);
+      color:var(--text); border-radius:8px; font-family:inherit; font-size:0.85rem; outline:none;
     }
+    .search-row input:focus { border-color:var(--accent); }
 
-    .pending { background:rgba(250,204,21,0.15); color:#facc15; }
-    .resolved { background:rgba(34,197,94,0.15); color:var(--success); }
-    .dismissed { background:rgba(107,107,138,0.15); color:var(--muted); }
+    .empty { padding:22px; text-align:center; color:var(--muted); font-size:0.8rem; }
 
-    button {
-      cursor:pointer;
-      border:none;
-      padding:6px 10px;
-      border-radius:6px;
-      font-size:0.75rem;
-      font-family:inherit;
+    #access-denied { display:none; text-align:center; padding:80px 20px; }
+    #access-denied h2 { font-family:Syne; color:var(--danger); margin-bottom:10px; }
+    #access-denied p  { color:var(--muted); font-size:0.85rem; }
+
+    .modal-overlay {
+      display:none; position:fixed; inset:0; z-index:200;
+      background:rgba(0,0,0,0.75); align-items:center; justify-content:center;
     }
-
-    .resolve { background:rgba(34,197,94,0.2); color:var(--success); }
-    .ban { background:rgba(239,68,68,0.2); color:#f87171; }
-
-    .search {
-      display:flex;
-      gap:10px;
-      padding:12px;
-      border-bottom:1px solid var(--border);
+    .modal-overlay.open { display:flex; }
+    .modal {
+      background:var(--surface); border:1px solid var(--border); border-radius:16px;
+      padding:24px; max-width:520px; width:92%; max-height:75vh; display:flex; flex-direction:column;
     }
-
-    input {
-      flex:1;
-      padding:8px;
-      background:var(--bg);
-      border:1px solid var(--border);
-      color:var(--text);
-      border-radius:6px;
-    }
-
-    #access { display:none; text-align:center; padding:60px; color:var(--danger); }
+    .modal-title { font-family:Syne; font-size:1rem; margin-bottom:14px; }
+    .chat-log { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+    .chat-log::-webkit-scrollbar { width:4px; }
+    .chat-log::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+    .chat-entry { padding:9px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; font-size:0.8rem; line-height:1.4; }
+    .chat-entry .who { color:var(--accent2); font-size:0.7rem; margin-bottom:3px; }
+    .modal-close { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:8px 20px; border-radius:8px; cursor:pointer; font-family:inherit; align-self:flex-end; }
   </style>
 </head>
-
 <body>
 
 <header>
   <div class="logo">Nexara</div>
-  <a href="chat.html" style="color:var(--muted); text-decoration:none;">Back</a>
+  <a href="chat.html" class="back-link">← Back to Chat</a>
 </header>
 
-<div id="access">
+<div id="access-denied">
   <h2>Access Denied</h2>
+  <p>You don't have permission to view this page.</p>
 </div>
 
 <div class="container" id="app" style="display:none">
-
   <h1>Staff Dashboard</h1>
-  <div class="subtitle" id="sub">Loading...</div>
+  <div class="subtitle" id="sub">Loading…</div>
 
   <div class="section">
     <div class="section-header">
       <strong>Reports</strong>
+      <button class="btn-refresh" id="refresh-reports">↻ Refresh</button>
     </div>
-    <div id="reports">Loading...</div>
+    <div id="reports-container"><div class="empty">Loading…</div></div>
   </div>
 
   <div class="section">
     <div class="section-header">
       <strong>User Search</strong>
     </div>
-
-    <div class="search">
-      <input id="searchInput" placeholder="email or username"/>
-      <button onclick="searchUsers()">Search</button>
+    <div class="search-row">
+      <input id="search-input" placeholder="Search by username or email…" />
+      <button class="btn-search" id="search-btn">Search</button>
     </div>
-
-    <div id="users"></div>
+    <div id="users-container"></div>
   </div>
+</div>
 
+<div class="modal-overlay" id="chat-modal">
+  <div class="modal">
+    <div class="modal-title">Recent Messages</div>
+    <div class="chat-log" id="chat-log-content"><div class="empty">Loading…</div></div>
+    <button class="modal-close" id="close-modal">Close</button>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  getDocs,
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  updateDoc,
-  serverTimestamp
+  getFirestore, doc, getDoc, getDocs,
+  collection, query, where, orderBy, limit,
+  updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
 import { firebaseConfig } from "./js/config.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const fireApp = initializeApp(firebaseConfig);
+const auth    = getAuth(fireApp);
+const db      = getFirestore(fireApp);
 
-const STAFF = ["moderator","admin","manager","founder"];
+const STAFF     = ["moderator","admin","manager","founder"];
+const CAN_BAN   = ["admin","manager","founder"];
+const CAN_ROLE  = ["manager","founder"];
+const ALL_ROLES = ["user","vip","moderator","admin","manager","founder"];
 
 let me = null;
 
-// ---------------- AUTH ----------------
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return location.href = "index.html";
+/* ── Tiny helpers ── */
+const esc = str => String(str ?? "")
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-  const snap = await getDoc(doc(db,"users",user.uid));
-  me = snap.data();
+const roleBadge = role =>
+  role ? `<span class="role-badge role-${esc(role)}">${esc(role)}</span>` : "";
+
+const statusBadge = s =>
+  `<span class="badge badge-${esc(s||"pending")}">${esc(s||"pending")}</span>`;
+
+/* ── Auth guard ── */
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.href = "index.html"; return; }
+
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    me = snap.exists() ? snap.data() : null;
+  } catch(e) { console.error(e); }
 
   if (!me || !STAFF.includes(me.role)) {
-    document.getElementById("access").style.display = "block";
+    document.getElementById("access-denied").style.display = "block";
     return;
   }
 
   document.getElementById("app").style.display = "block";
-  document.getElementById("sub").textContent =
-    `Logged in as ${me.displayName} (${me.role})`;
+  document.getElementById("sub").innerHTML =
+    `Signed in as <strong>${esc(me.displayName)}</strong> ${roleBadge(me.role)}`;
 
   loadReports();
+  wireListeners();
 });
 
-// ---------------- REPORTS ----------------
-async function loadReports() {
-  const q = query(
-    collection(db,"reports"),
-    orderBy("createdAt","desc"),
-    limit(50)
-  );
+/* ══════════════════════════════════════════
+   WIRE ALL LISTENERS (called once after auth)
+══════════════════════════════════════════ */
+function wireListeners() {
 
-  const snap = await getDocs(q);
+  /* Reports table — event delegation */
+  document.getElementById("reports-container").addEventListener("click", async e => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    const { action, reportId, reportedId, reporterId } = btn.dataset;
 
-  const reports = snap.docs.map(d => ({id:d.id,...d.data()}));
-
-  document.getElementById("reports").innerHTML = `
-    <table>
-      <tr>
-        <th>Reason</th>
-        <th>Reporter</th>
-        <th>Reported</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-
-      ${reports.map(r => `
-        <tr>
-          <td>${r.reason || "—"}</td>
-          <td>${r.reporterName || "—"}</td>
-          <td>${r.reportedUserName || r.reportedSocketId || "—"}</td>
-          <td><span class="badge ${r.status}">${r.status}</span></td>
-          <td>
-            <button onclick="viewChats('${r.reporterId}','${r.reportedUserId}')">Chats</button>
-
-            ${r.status==="pending" ? `
-              <button class="resolve" onclick="setStatus('${r.id}','resolved')">Resolve</button>
-              <button class="ban" onclick="setStatus('${r.id}','dismissed')">Dismiss</button>
-            ` : ""}
-          </td>
-        </tr>
-      `).join("")}
-    </table>
-  `;
-}
-
-// ---------------- UPDATE ----------------
-window.setStatus = async (id,status) => {
-  await updateDoc(doc(db,"reports",id),{
-    status,
-    resolvedBy: me.displayName,
-    resolvedAt: serverTimestamp()
+    if (action === "resolve")         await setReportStatus(reportId, "resolved");
+    if (action === "dismiss")         await setReportStatus(reportId, "dismissed");
+    if (action === "ban-report-user") await banFromReport(reportedId, reportId);
+    if (action === "view-chats")      await openChatModal(reporterId, reportedId);
   });
 
-  loadReports();
-};
+  /* Users table — event delegation */
+  document.getElementById("users-container").addEventListener("click", async e => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    const { action, uid } = btn.dataset;
 
-// ---------------- SEARCH USERS ----------------
-window.searchUsers = async () => {
-  const val = document.getElementById("searchInput").value.trim();
+    if (action === "ban-user")   await setUserBanned(uid, true,  btn);
+    if (action === "unban-user") await setUserBanned(uid, false, btn);
+    if (action === "set-role") {
+      const select = btn.closest("tr")?.querySelector("select");
+      if (select) await setUserRole(uid, select.value, btn);
+    }
+  });
+
+  /* Refresh reports */
+  document.getElementById("refresh-reports").addEventListener("click", loadReports);
+
+  /* Search */
+  document.getElementById("search-btn").addEventListener("click", searchUsers);
+  document.getElementById("search-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") searchUsers();
+  });
+
+  /* Modal close */
+  document.getElementById("close-modal").addEventListener("click", closeModal);
+  document.getElementById("chat-modal").addEventListener("click", e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+}
+
+function closeModal() {
+  document.getElementById("chat-modal").classList.remove("open");
+}
+
+/* ══════════════════════════════════════════
+   REPORTS
+══════════════════════════════════════════ */
+async function loadReports() {
+  const el = document.getElementById("reports-container");
+  el.innerHTML = `<div class="empty">Loading…</div>`;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "reports"),
+      orderBy("createdAt", "desc"),
+      limit(50)
+    ));
+
+    if (snap.empty) { el.innerHTML = `<div class="empty">No reports yet.</div>`; return; }
+
+    const rows = snap.docs.map(d => {
+      const r  = d.data();
+      const id = d.id;
+      const hasUid   = r.reportedUserId && r.reportedUserId !== "null" && r.reportedUserId !== "undefined";
+      const hasBoth  = hasUid && r.reporterId;
+
+      return `<tr>
+        <td>${esc(r.reason) || "—"}</td>
+        <td>${esc(r.reporterName) || "—"}</td>
+        <td>${esc(r.reportedUserName) || "—"}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td><div class="action-btns">
+
+          ${hasBoth ? `<button class="btn btn-chats"
+            data-action="view-chats"
+            data-reporter-id="${esc(r.reporterId)}"
+            data-reported-id="${esc(r.reportedUserId)}">Chats</button>` : ""}
+
+          ${r.status === "pending" ? `
+            <button class="btn btn-resolve" data-action="resolve" data-report-id="${id}">Resolve</button>
+            <button class="btn btn-dismiss" data-action="dismiss" data-report-id="${id}">Dismiss</button>` : ""}
+
+          ${hasUid && CAN_BAN.includes(me.role) ? `
+            <button class="btn btn-ban"
+              data-action="ban-report-user"
+              data-report-id="${id}"
+              data-reported-id="${esc(r.reportedUserId)}">Ban User</button>` : ""}
+
+        </div></td>
+      </tr>`;
+    }).join("");
+
+    el.innerHTML = `<table>
+      <thead><tr>
+        <th>Reason</th><th>Reporter</th><th>Reported</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  } catch(err) {
+    el.innerHTML = `<div class="empty" style="color:var(--danger)">Error loading reports: ${esc(err.message)}</div>`;
+    console.error(err);
+  }
+}
+
+async function setReportStatus(reportId, status) {
+  if (!reportId) return;
+  try {
+    await updateDoc(doc(db, "reports", reportId), {
+      status,
+      resolvedBy: me.displayName,
+      resolvedAt: serverTimestamp()
+    });
+    loadReports();
+  } catch(err) { alert("Update failed: " + err.message); }
+}
+
+async function banFromReport(reportedUserId, reportId) {
+  if (!reportedUserId || reportedUserId === "null") {
+    alert("No Firebase UID on this report. Use User Search to ban by name instead.");
+    return;
+  }
+  if (!CAN_BAN.includes(me.role)) { alert("No permission to ban."); return; }
+  if (!confirm("Ban this user? They will be locked out immediately.")) return;
+  try {
+    await updateDoc(doc(db, "users", reportedUserId), { banned: true });
+    if (reportId) await setReportStatus(reportId, "resolved");
+    else loadReports();
+  } catch(err) { alert("Ban failed: " + err.message); }
+}
+
+/* ══════════════════════════════════════════
+   USER SEARCH
+══════════════════════════════════════════ */
+async function searchUsers() {
+  const val = document.getElementById("search-input").value.trim();
   if (!val) return;
 
-  const q = query(
-    collection(db,"users"),
-    where("displayName","==",val),
-    limit(10)
-  );
+  const el = document.getElementById("users-container");
+  el.innerHTML = `<div class="empty">Searching…</div>`;
 
-  const snap = await getDocs(q);
+  try {
+    let docs = [];
+    const byName = await getDocs(query(collection(db,"users"), where("displayName","==",val), limit(10)));
+    docs = byName.docs;
 
-  document.getElementById("users").innerHTML =
-    snap.docs.map(d => {
-      const u = d.data();
-      return `<div style="padding:10px;border-bottom:1px solid #222">
-        <b>${u.displayName}</b> — ${u.email || "no email"}
-      </div>`;
-    }).join("") || "No users found";
-};
+    if (!docs.length) {
+      const byEmail = await getDocs(query(collection(db,"users"), where("email","==",val), limit(10)));
+      docs = byEmail.docs;
+    }
 
-// ---------------- CHAT VIEW ----------------
-window.viewChats = async (a,b) => {
-  if (!a || !b) return alert("Missing chat data");
+    if (!docs.length) { el.innerHTML = `<div class="empty">No users found for "${esc(val)}".</div>`; return; }
 
-  const chatId = [a,b].sort().join("_");
+    const rows = docs.map(d => {
+      const u      = d.data();
+      const uid    = d.id;
+      const banned = !!u.banned;
 
-  const snap = await getDocs(
-    query(
-      collection(db,"chats",chatId,"messages"),
-      orderBy("createdAt","desc"),
-      limit(10)
-    )
-  );
+      return `<tr>
+        <td><strong>${esc(u.displayName) || "—"}</strong></td>
+        <td style="color:var(--muted)">${esc(u.email) || "—"}</td>
+        <td>${roleBadge(u.role || "user")}</td>
+        <td>${banned
+          ? `<span style="color:var(--danger);font-size:0.75rem">● Banned</span>`
+          : `<span style="color:var(--success);font-size:0.75rem">● Active</span>`}</td>
+        <td><div class="action-btns">
 
-  const msgs = snap.docs.map(d => d.data()).reverse();
+          ${CAN_BAN.includes(me.role) ? (banned
+            ? `<button class="btn btn-unban" data-action="unban-user" data-uid="${uid}">Unban</button>`
+            : `<button class="btn btn-ban"   data-action="ban-user"   data-uid="${uid}">Ban</button>`
+          ) : ""}
 
-  alert(
-    msgs.length
-      ? msgs.map(m => `${m.senderName}: ${m.message}`).join("\n")
-      : "No messages"
-  );
-};
+          ${CAN_ROLE.includes(me.role) ? `
+            <select>
+              ${ALL_ROLES.map(r =>
+                `<option value="${r}" ${r===(u.role||"user")?"selected":""}>${r}</option>`
+              ).join("")}
+            </select>
+            <button class="btn btn-setrole" data-action="set-role" data-uid="${uid}">Set Role</button>
+          ` : ""}
+
+        </div></td>
+      </tr>`;
+    }).join("");
+
+    el.innerHTML = `<table>
+      <thead><tr>
+        <th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  } catch(err) {
+    el.innerHTML = `<div class="empty" style="color:var(--danger)">Error: ${esc(err.message)}</div>`;
+    console.error(err);
+  }
+}
+
+async function setUserBanned(uid, ban, btn) {
+  if (!CAN_BAN.includes(me.role)) { alert("No permission."); return; }
+  if (ban && !confirm("Ban this user?")) return;
+  btn.disabled = true;
+  try {
+    await updateDoc(doc(db, "users", uid), { banned: ban });
+    await searchUsers();
+  } catch(err) { alert("Failed: " + err.message); btn.disabled = false; }
+}
+
+async function setUserRole(uid, role, btn) {
+  if (!CAN_ROLE.includes(me.role)) { alert("No permission."); return; }
+  if (role === "founder" && me.role !== "founder") {
+    alert("Only a founder can assign the founder role.");
+    return;
+  }
+  if (!confirm(`Set role to "${role}"?`)) return;
+  btn.disabled = true;
+  try {
+    await updateDoc(doc(db, "users", uid), { role });
+    await searchUsers();
+  } catch(err) { alert("Failed: " + err.message); btn.disabled = false; }
+}
+
+/* ══════════════════════════════════════════
+   CHAT LOG MODAL
+══════════════════════════════════════════ */
+async function openChatModal(reporterId, reportedId) {
+  const modal   = document.getElementById("chat-modal");
+  const content = document.getElementById("chat-log-content");
+  content.innerHTML = `<div class="empty">Loading…</div>`;
+  modal.classList.add("open");
+
+  const invalid = !reporterId || !reportedId
+    || reportedId === "null" || reportedId === "undefined";
+
+  if (invalid) {
+    content.innerHTML = `<div class="empty">Chat history not available — missing user IDs.</div>`;
+    return;
+  }
+
+  try {
+    const chatId = [reporterId, reportedId].sort().join("_");
+    const snap = await getDocs(query(
+      collection(db, "chats", chatId, "messages"),
+      orderBy("createdAt", "desc"),
+      limit(20)
+    ));
+
+    if (snap.empty) { content.innerHTML = `<div class="empty">No messages found.</div>`; return; }
+
+    content.innerHTML = snap.docs.map(d => d.data()).reverse().map(m => `
+      <div class="chat-entry">
+        <div class="who">${esc(m.senderName) || "Unknown"}</div>
+        <div>${esc(m.message) || ""}</div>
+      </div>`).join("");
+  } catch(err) {
+    content.innerHTML = `<div class="empty" style="color:var(--danger)">Error: ${esc(err.message)}</div>`;
+    console.error(err);
+  }
+}
 </script>
-
 </body>
 </html>

@@ -523,8 +523,10 @@ let socket       = null;
 let pc           = null;
 let localStream  = null;   // camera/mic stream
 let screenStream = null;   // screen share stream
-let partnerId    = null;
+let partnerId    = null;   // socket id
+let partnerUid   = null;   // firebase uid
 let partnerName  = "Stranger";
+let partnerRole  = "user";
 let selectedReason = "";
 let camOn        = true;
 let micOn        = true;
@@ -598,24 +600,18 @@ function initSocket() {
   socket.on("connect_error", err => console.error("Socket error:", err));
 
   /* ── Matched ── */
-  socket.on("matched", async ({ partnerId: pid, initiator, partnerName: pName }) => {
+  socket.on("matched", async ({ partnerId: pid, partnerUid: pUid, initiator, partnerName: pName, partnerRole: pRole }) => {
     partnerId   = pid;
+    partnerUid  = pUid  || null;
     partnerName = pName || "Stranger";
-
-    // Fetch partner Firestore doc to get their role
-    let partnerRole = "";
-    try {
-      // We don't have partner UID directly, but server could pass it.
-      // partnerName will show; role badge only if server sends uid.
-      // For now show name; role badge shown if partnerData arrives via custom event.
-    } catch(e) {}
+    partnerRole = pRole || "user";
 
     $("waiting-text").textContent = `Connected to ${partnerName}`;
     $("remote-placeholder").querySelector("p").textContent = partnerName;
-    $("remote-label").innerHTML = partnerName + (partnerRole ? ` ${roleBadgeHtml(partnerRole)}` : "");
+    $("remote-label").innerHTML = partnerName + (BADGE_ROLES.includes(partnerRole) ? ` ${roleBadgeHtml(partnerRole)}` : "");
 
     $("send-btn").disabled = false;
-    systemMsg(`You are now chatting with ${partnerName}.`);
+    systemMsg(`You are now chatting with ${partnerName}${BADGE_ROLES.includes(partnerRole) ? ` [${partnerRole}]` : ""}.`);
 
     await setupPeer(initiator);
   });
@@ -662,7 +658,9 @@ function initSocket() {
   socket.on("partner-disconnected", () => {
     systemMsg(`${partnerName} disconnected.`);
     partnerId   = null;
+    partnerUid  = null;
     partnerName = "Stranger";
+    partnerRole = "user";
     $("waiting-text").textContent = "Partner left. Press Next or Start again.";
     $("send-btn").disabled = true;
     $("remote-video").srcObject = null;
@@ -755,7 +753,9 @@ window.nextPartner = () => {
   if (partnerId) {
     socket.emit("skip");
     partnerId = null;
+    partnerUid = null;
     partnerName = "Stranger";
+    partnerRole = "user";
   }
 
   $("remote-video").srcObject = null;
@@ -930,6 +930,7 @@ window.submitReport = async () => {
     await addDoc(collection(db, "reports"), {
       reporterId:        currentUser.uid,
       reporterName:      userData.displayName,
+      reportedUserId:    partnerUid,          // Firebase UID — now available from server
       reportedSocketId:  partnerId,
       reportedUserName:  partnerName,
       reason:            selectedReason,
