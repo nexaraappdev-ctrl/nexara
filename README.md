@@ -24,19 +24,19 @@
 5. Add these Firestore security rules under **Rules**:
 
 ```
-rules\\\\\\\\\\\\\\\_version = '2';
+rules\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{uid} {
       allow read: if request.auth != null;
       allow write: if request.auth.uid == uid;
       allow update: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-        in \\\\\\\\\\\\\\\['admin','manager','founder'];
+        in \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\['admin','manager','founder'];
     }
     match /reports/{id} {
       allow create: if request.auth != null;
       allow read, update: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-        in \\\\\\\\\\\\\\\['moderator','admin','manager','founder'];
+        in \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\['moderator','admin','manager','founder'];
     }
   }
 }
@@ -58,9 +58,9 @@ service cloud.firestore {
    * **Start command:** `npm start`
    * **Instance type:** Free
 5. Deploy — copy the URL (e.g. `https://your-app.onrender.com`)
-6. Paste it into `frontend/js/config.js` as `BACKEND\\\\\\\\\\\\\\\_URL`
+6. Paste it into `frontend/js/config.js` as `BACKEND\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_URL`
 
-> ⚠️ \\\\\\\\\\\\\\\*\\\\\\\\\\\\\\\*Free Render tier sleeps after 15 min of inactivity\\\\\\\\\\\\\\\*\\\\\\\\\\\\\\\* — first connection may take \\\\\\\\\\\\\\\~30s to wake up.
+> ⚠️ \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*Free Render tier sleeps after 15 min of inactivity\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\* — first connection may take \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\~30s to wake up.
 
 \---
 
@@ -113,7 +113,7 @@ frontend/
   index.html        ← Sign in / Sign up page
   chat.html         ← Main video chat
   admin.html        ← Staff panel
-  \\\\\\\\\\\\\\\_redirects        ← Netlify routing
+  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_redirects        ← Netlify routing
   js/
     config.js       ← ⚠️ Fill in your Firebase + Render URL here
 ```

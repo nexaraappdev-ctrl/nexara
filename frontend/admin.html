@@ -348,21 +348,19 @@ async function banFromReport(reportedUserId, reportId) {
    USER SEARCH
 ══════════════════════════════════════════ */
 async function searchUsers() {
-  const val = document.getElementById("search-input").value.trim();
+  const val = document.getElementById("search-input").value.trim().toLowerCase();
   if (!val) return;
 
   const el = document.getElementById("users-container");
   el.innerHTML = `<div class="empty">Searching…</div>`;
 
   try {
-    let docs = [];
-    const byName = await getDocs(query(collection(db,"users"), where("displayName","==",val), limit(10)));
-    docs = byName.docs;
-
-    if (!docs.length) {
-      const byEmail = await getDocs(query(collection(db,"users"), where("email","==",val), limit(10)));
-      docs = byEmail.docs;
-    }
+    const allSnap = await getDocs(collection(db, "users"));
+    const docs = allSnap.docs.filter(d => {
+      const u = d.data();
+      return (u.displayName && u.displayName.toLowerCase().includes(val)) ||
+             (u.email && u.email.toLowerCase().includes(val));
+    });
 
     if (!docs.length) { el.innerHTML = `<div class="empty">No users found for "${esc(val)}".</div>`; return; }
 
