@@ -273,6 +273,9 @@
     let currentUser = null, userData = null;
     let socket = null, pc = null;
     let localStream = null, partnerId = null, partnerName = "Stranger";
+
+    window.currentChatPartner = null;
+
     let camOn = true, micOn = true, screenSharing = false;
     let selectedReason = "";
 
@@ -322,6 +325,7 @@ function initSocket() {
   socket.on("matched", async ({ partnerId: pid, initiator, partnerName: pn }) => {
     partnerId = pid;
     partnerName = pn || "Stranger";
+    window.currentChatPartner = pid;
 
     document.getElementById("remote-label").textContent = partnerName;
     document.getElementById("remote-status").classList.add("hidden");
@@ -359,11 +363,13 @@ function initSocket() {
     document.getElementById("remote-status-text").textContent = "Press Next to find someone new";
     document.getElementById("waiting-text").textContent = "Disconnected";
     partnerId = null;
+    window.currentChatPartner = null;
   });
 
   socket.on("skipped", () => {
     resetPeer();
     document.getElementById("remote-status-text").textContent = "Searching...";
+    window.currentChatPartner = null;
   });
 }
 
@@ -393,6 +399,7 @@ function initSocket() {
     function resetPeer() {
       if (pc) { pc.close(); pc = null; }
       document.getElementById("remote-video").srcObject = null;
+      window.currentChatPartner = null;
     }
 
 // --- Controls ---
@@ -532,7 +539,9 @@ window.toggleMic = () => {
       await addDoc(collection(db, "reports"), {
         reporterId: currentUser.uid,
         reporterName: userData.displayName,
-        reportedSocketId: partnerId || "unknown",
+        reportedUserId: partnerId,
+	reportedUserName: partnerName,
+	reportedSocketId: partnerId
         reason: selectedReason,
         notes,
         status: "pending",

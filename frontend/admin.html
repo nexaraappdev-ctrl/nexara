@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RandomChat — Staff Panel</title>
+  <title>Nexara — Staff Panel</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -113,7 +113,7 @@
 </head>
 <body>
   <header>
-    <span class="logo-sm">RandomChat Staff</span>
+    <span class="logo-sm">Admin Panel</span>
     <a class="back-btn" href="chat.html">← Back to Chat</a>
   </header>
 
@@ -157,173 +157,174 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc, getDocs, updateDoc, collection,
-      query, where, orderBy, limit, serverTimestamp, getCountFromServer
-    } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-    import { firebaseConfig } from "./js/config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, getDocs, updateDoc,
+  collection, query, where, orderBy, limit, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+import { firebaseConfig } from "./js/config.js";
 
-    const STAFF_ROLES = ["moderator", "admin", "manager", "founder"];
-    const ADMIN_ROLES = ["admin", "manager", "founder"];
-    let currentUserData = null;
-    let allReports = [];
-    let currentFilter = "pending";
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) { window.location.href = "index.html"; return; }
-      const snap = await getDoc(doc(db, "users", user.uid));
-      currentUserData = snap.exists() ? snap.data() : null;
+const STAFF_ROLES = ["moderator", "admin", "manager", "founder"];
 
-      if (!currentUserData || !STAFF_ROLES.includes(currentUserData.role)) {
-        document.getElementById("access-denied").style.display = "block";
-        return;
-      }
+let currentUserData = null;
+let allReports = [];
+let currentFilter = "pending";
 
-      document.getElementById("panel-content").style.display = "block";
-      document.getElementById("panel-subtitle").textContent =
-        `Logged in as ${currentUserData.displayName} · Role: ${currentUserData.role.toUpperCase()}`;
+// ---------------- AUTH ----------------
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return (window.location.href = "index.html");
 
-      if (!ADMIN_ROLES.includes(currentUserData.role)) {
-        document.getElementById("user-section").style.display = "none";
-      }
+  const snap = await getDoc(doc(db, "users", user.uid));
+  currentUserData = snap.exists() ? snap.data() : null;
 
-      await loadStats();
-      await loadReports();
-    });
+  if (!currentUserData || !STAFF_ROLES.includes(currentUserData.role)) {
+    document.getElementById("access-denied").style.display = "block";
+    return;
+  }
 
-    async function loadStats() {
-      const pendingSnap = await getCountFromServer(query(collection(db, "reports"), where("status", "==", "pending")));
-      const resolvedSnap = await getCountFromServer(query(collection(db, "reports"), where("status", "==", "resolved")));
-      const usersSnap = await getCountFromServer(collection(db, "users"));
-      document.getElementById("stat-pending").textContent = pendingSnap.data().count;
-      document.getElementById("stat-resolved").textContent = resolvedSnap.data().count;
-      document.getElementById("stat-users").textContent = usersSnap.data().count;
-    }
+  document.getElementById("panel-content").style.display = "block";
+  document.getElementById("panel-subtitle").textContent =
+    `Logged in as ${currentUserData.displayName} · Role: ${currentUserData.role.toUpperCase()}`;
 
-    async function loadReports() {
-      let q;
-      if (currentFilter === "pending") {
-        q = query(collection(db, "reports"), where("status", "==", "pending"), orderBy("createdAt", "desc"), limit(50));
-      } else if (currentFilter === "resolved") {
-        q = query(collection(db, "reports"), where("status", "==", "resolved"), orderBy("createdAt", "desc"), limit(50));
-      } else {
-        q = query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(50));
-      }
-      const snap = await getDocs(q);
-      allReports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderReports();
-    }
+  await loadReports();
+});
 
-    function renderReports() {
-      const c = document.getElementById("reports-container");
-      if (allReports.length === 0) {
-        c.innerHTML = `<div class="empty">No ${currentFilter} reports.</div>`;
-        return;
-      }
-      c.innerHTML = `
-        <table>
-          <thead><tr>
-            <th>Reason</th><th>Reporter</th><th>Time</th><th>Status</th><th>Actions</th>
-          </tr></thead>
-          <tbody>
-            ${allReports.map(r => `
-              <tr>
-                <td>
-                  <div class="report-reason">${r.reason}</div>
-                  ${r.notes ? `<div class="report-notes-text">${r.notes}</div>` : ""}
-                </td>
-                <td class="meta">${r.reporterName || "—"}</td>
-                <td class="meta">${r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleString() : "—"}</td>
-                <td><span class="badge ${r.status}">${r.status}</span></td>
-                <td>
-                  <div class="action-btns">
-                    ${r.status === "pending" ? `
-                      <button class="act-btn resolve" onclick="updateReport('${r.id}', 'resolved')">✓ Resolve</button>
-                      <button class="act-btn" onclick="updateReport('${r.id}', 'dismissed')">✗ Dismiss</button>
-                    ` : ""}
-                  </div>
-                </td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>`;
-    }
+// ---------------- REPORTS ----------------
+async function loadReports() {
+  let q;
 
-    window.filterReports = async (f) => {
-      currentFilter = f;
-      document.querySelectorAll(".ftab").forEach((t, i) => {
-        t.classList.toggle("active", ["pending","all","resolved"][i] === f);
-      });
-      await loadReports();
-    };
+  if (currentFilter === "pending") {
+    q = query(collection(db, "reports"), where("status", "==", "pending"), orderBy("createdAt", "desc"), limit(50));
+  } else if (currentFilter === "resolved") {
+    q = query(collection(db, "reports"), where("status", "==", "resolved"), orderBy("createdAt", "desc"), limit(50));
+  } else {
+    q = query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(50));
+  }
 
-    window.updateReport = async (id, status) => {
-      await updateDoc(doc(db, "reports", id), {
-        status,
-        resolvedBy: currentUserData.displayName,
-        resolvedAt: serverTimestamp(),
-      });
-      await loadStats();
-      await loadReports();
-    };
+  const snap = await getDocs(q);
+  allReports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderReports();
+}
 
-    window.searchUsers = async () => {
-      const query_str = document.getElementById("user-search-input").value.trim().toLowerCase();
-      if (!query_str) return;
-      const snap = await getDocs(collection(db, "users"));
-      const results = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(u =>
-          (u.email && u.email.toLowerCase().includes(query_str)) ||
-          (u.displayName && u.displayName.toLowerCase().includes(query_str))
-        );
-      renderUsers(results);
-    };
+function renderReports() {
+  const c = document.getElementById("reports-container");
 
-    function renderUsers(users) {
-      const c = document.getElementById("users-container");
-      if (users.length === 0) { c.innerHTML = `<div class="empty">No users found.</div>`; return; }
-      c.innerHTML = `
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody>
-            ${users.map(u => `
-              <tr>
-                <td>${u.displayName || "—"}</td>
-                <td class="meta">${u.email || u.phone || "—"}</td>
-                <td>
-                  <select class="role-select" onchange="updateRole('${u.id}', this.value)" ${currentUserData.role !== "founder" && currentUserData.role !== "manager" ? "disabled" : ""}>
-                    ${["user","vip","moderator","admin","manager","founder"].map(r =>
-                      `<option value="${r}" ${u.role === r ? "selected" : ""}>${r}</option>`
-                    ).join("")}
-                  </select>
-                </td>
-                <td><span class="badge ${u.banned ? 'pending' : 'resolved'}">${u.banned ? "banned" : "active"}</span></td>
-                <td>
-                  <div class="action-btns">
-                    <button class="act-btn ban" onclick="toggleBan('${u.id}', ${!u.banned})">${u.banned ? "Unban" : "Ban"}</button>
-                  </div>
-                </td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>`;
-    }
+  if (!allReports.length) {
+    c.innerHTML = `<div class="empty">No reports.</div>`;
+    return;
+  }
 
-    window.updateRole = async (uid, role) => {
-      await updateDoc(doc(db, "users", uid), { role });
-    };
+  c.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Reason</th>
+          <th>Reporter</th>
+          <th>Reported User</th>
+          <th>Time</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
 
-    window.toggleBan = async (uid, ban) => {
-      await updateDoc(doc(db, "users", uid), { banned: ban });
-      searchUsers();
-    };
-  </script>
+      <tbody>
+        ${allReports.map(r => `
+          <tr>
+            <td>
+              <div class="report-reason">${r.reason || "—"}</div>
+              ${r.notes ? `<div class="report-notes-text">${r.notes}</div>` : ""}
+            </td>
+
+            <td class="meta">${r.reporterName || "—"}</td>
+
+            <td class="meta">
+ 		 ${r.reportedSocketId || "Unknown"}
+	    </td>
+
+            <td class="meta">
+              ${
+                r.createdAt?.seconds
+                  ? new Date(r.createdAt.seconds * 1000).toLocaleString()
+                  : "—"
+              }
+            </td>
+
+            <td>
+              <span class="badge ${r.status}">${r.status}</span>
+            </td>
+
+            <td>
+              <div class="action-btns">
+
+                <button class="act-btn" onclick="viewChats('${r.reporterId}', '${r.reportedUserId || ""}')">
+                  View Chats
+                </button>
+
+                ${r.status === "pending" ? `
+                  <button class="act-btn resolve" onclick="updateReport('${r.id}', 'resolved')">Resolve</button>
+                  <button class="act-btn ban" onclick="updateReport('${r.id}', 'dismissed')">Dismiss</button>
+                ` : ""}
+              </div>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+// ---------------- UPDATE REPORT ----------------
+window.updateReport = async (id, status) => {
+  await updateDoc(doc(db, "reports", id), {
+    status,
+    resolvedBy: currentUserData.displayName,
+    resolvedAt: serverTimestamp()
+  });
+
+  await loadReports();
+};
+
+// ---------------- CHAT VIEWER (last 10 messages) ----------------
+// expects you have a "chats" collection like:
+// chats/{chatId}/messages
+
+window.viewChats = async (userA, userB) => {
+  if (!userA || !userB) {
+    alert("No chat data available for this report.");
+    return;
+  }
+
+  const chatId = [userA, userB].sort().join("_");
+
+  const snap = await getDocs(
+    query(
+      collection(db, "chats", chatId, "messages"),
+      orderBy("createdAt", "desc"),
+      limit(10)
+    )
+  );
+
+  const msgs = snap.docs.map(d => d.data()).reverse();
+
+  alert(
+    msgs.length
+      ? msgs.map(m => `${m.senderName}: ${m.message}`).join("\n")
+      : "No messages found."
+  );
+};
+
+// ---------------- FILTER ----------------
+window.filterReports = async (f) => {
+  currentFilter = f;
+  await loadReports();
+};
+
+</script>
 </body>
 </html>
