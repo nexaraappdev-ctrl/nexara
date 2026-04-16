@@ -1,9 +1,11 @@
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import {
   getAuth,
   onAuthStateChanged,
-  signOut as fbSignOut
+  signOut as firebaseSignOut
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 import {
@@ -17,19 +19,19 @@ import {
 
 import { firebaseConfig, BACKEND_URL } from "./js/config.js";
 
-/* ================= INIT ================= */
+/* ---------------- INIT ---------------- */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ================= STATE ================= */
+/* ---------------- STATE ---------------- */
 let currentUser = null;
 let userData = null;
 
 let socket = null;
 let pc = null;
-let localStream = null;
 
+let localStream = null;
 let partnerId = null;
 let partnerName = "Stranger";
 
@@ -38,15 +40,31 @@ window.currentChatPartner = null;
 let camOn = true;
 let micOn = true;
 let screenSharing = false;
-
 let selectedReason = "";
+
 let authReady = false;
 
 const ICE_SERVERS = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
 };
 
-/* ================= AUTH ================= */
+/* ---------------- PANEL SWITCH ---------------- */
+window.showPanel = (panel) => {
+  document.getElementById("chat-panel").classList.add("hidden");
+  document.getElementById("report-panel").classList.add("hidden");
+
+  document.querySelectorAll(".stab").forEach(b => b.classList.remove("active"));
+
+  if (panel === "chat") {
+    document.getElementById("chat-panel").classList.remove("hidden");
+    document.querySelectorAll(".stab")[0].classList.add("active");
+  } else {
+    document.getElementById("report-panel").classList.remove("hidden");
+    document.querySelectorAll(".stab")[1].classList.add("active");
+  }
+};
+
+/* ---------------- AUTH ---------------- */
 onAuthStateChanged(auth, async (user) => {
   authReady = true;
 
@@ -76,7 +94,7 @@ onAuthStateChanged(auth, async (user) => {
   initSocket();
 });
 
-/* ================= SOCKET ================= */
+/* ---------------- SOCKET ---------------- */
 function initSocket() {
   socket = window.io(BACKEND_URL, {
     transports: ["websocket", "polling"]
@@ -135,7 +153,7 @@ function initSocket() {
   });
 }
 
-/* ================= PEER ================= */
+/* ---------------- PEER ---------------- */
 async function setupPeer(initiator) {
   pc = new RTCPeerConnection(ICE_SERVERS);
 
@@ -160,12 +178,6 @@ async function setupPeer(initiator) {
     }
   };
 
-  pc.onconnectionstatechange = () => {
-    if (["failed", "disconnected", "closed"].includes(pc.connectionState)) {
-      addSysMsg("Connection lost.");
-    }
-  };
-
   if (initiator) {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
@@ -173,17 +185,16 @@ async function setupPeer(initiator) {
   }
 }
 
-/* ================= RESET ================= */
+/* ---------------- RESET ---------------- */
 function resetPeer() {
   if (pc) {
     pc.close();
     pc = null;
   }
-
   document.getElementById("remote-video").srcObject = null;
 }
 
-/* ================= START ================= */
+/* ---------------- START CHAT ---------------- */
 window.startChat = async () => {
   if (!authReady || !socket || !currentUser || !userData) return;
 
@@ -202,7 +213,7 @@ window.startChat = async () => {
     document.getElementById("local-video").srcObject = localStream;
     document.getElementById("local-status").classList.add("hidden");
 
-  } catch (e) {
+  } catch {
     addSysMsg("No camera/mic access — text mode only.");
     localStream = null;
   }
@@ -213,26 +224,19 @@ window.startChat = async () => {
   });
 };
 
-/* ================= NEXT ================= */
+/* ---------------- NEXT ---------------- */
 window.nextPartner = () => {
   addSysMsg("Searching new partner...");
-
   socket.emit("skip");
-
   resetPeer();
-
   partnerId = null;
-
-  document.getElementById("remote-video").srcObject = null;
-  document.getElementById("remote-status").classList.remove("hidden");
-
   socket.emit("find-partner", {
     uid: currentUser.uid,
     displayName: userData.displayName
   });
 };
 
-/* ================= CHAT ================= */
+/* ---------------- CHAT ---------------- */
 window.sendMessage = () => {
   const input = document.getElementById("chat-input");
   const msg = input.value.trim();
@@ -253,11 +257,10 @@ window.onChatKey = (e) => {
   if (e.key === "Enter") sendMessage();
 };
 
-/* ================= UI ================= */
+/* ---------------- UI ---------------- */
 function addMsg(text, name, type) {
   const box = document.getElementById("messages");
   const div = document.createElement("div");
-
   div.className = `msg-item ${type}`;
 
   div.innerHTML =
@@ -273,24 +276,23 @@ function addSysMsg(text) {
   addMsg(text, "", "system");
 }
 
-function esc(t) {
+function esc(t = "") {
   return t.replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;");
 }
 
-/* ================= REPORT ================= */
+/* ---------------- REPORT ---------------- */
 window.selectReason = (btn, reason) => {
   document.querySelectorAll(".reason-btn").forEach(b =>
     b.classList.remove("selected")
   );
-
   btn.classList.add("selected");
   selectedReason = reason;
 };
 
 window.submitReport = async () => {
-  if (!selectedReason) return alert("Select reason");
+  if (!selectedReason) return;
 
   const notes = document.getElementById("report-notes").value.trim();
 
@@ -298,7 +300,6 @@ window.submitReport = async () => {
     reporterId: currentUser.uid,
     reporterName: userData.displayName,
     reportedUserId: partnerId,
-    reportedUserName: partnerName,
     reason: selectedReason,
     notes,
     status: "pending",
@@ -306,17 +307,22 @@ window.submitReport = async () => {
   });
 
   addSysMsg("Report sent.");
+  selectedReason = "";
+  document.getElementById("report-notes").value = "";
+  showPanel("chat");
 };
 
-/* ================= SIGN OUT ================= */
-window.signOut = () =>
+/* ---------------- SIGN OUT ---------------- */
+window.signOut = () => {
   document.getElementById("signout-modal").classList.add("open");
+};
 
-window.closeModal = () =>
+window.closeModal = () => {
   document.getElementById("signout-modal").classList.remove("open");
+};
 
 window.confirmSignOut = async () => {
-  await fbSignOut(auth);
+  await firebaseSignOut(auth);
   window.location.href = "index.html";
 };
 </script>
