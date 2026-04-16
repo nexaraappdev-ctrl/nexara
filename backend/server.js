@@ -32,16 +32,14 @@ function removeFromQueue(socketId) {
 io.on("connection", (socket) => {
   console.log("Connected:", socket.id);
 
+  // ---------------- MATCHMAKING ----------------
   socket.on("find-partner", (userData) => {
     removeFromQueue(socket.id);
 
-    const partnerIdx = waitingUsers.findIndex(
-      (u) => u.socketId !== socket.id
-    );
+    // FIFO matchmaking (FIXED)
+    const partner = waitingUsers.shift();
 
-    if (partnerIdx !== -1) {
-      const partner = waitingUsers.splice(partnerIdx, 1)[0];
-
+    if (partner && partner.socketId !== socket.id) {
       activePairs.set(socket.id, partner.socketId);
       activePairs.set(partner.socketId, socket.id);
 
@@ -62,10 +60,12 @@ io.on("connection", (socket) => {
     }
   });
 
+  // ---------------- WEBRTC SIGNALING ----------------
   socket.on("signal", ({ to, data }) => {
     io.to(to).emit("signal", { from: socket.id, data });
   });
 
+  // ---------------- CHAT ----------------
   socket.on("chat-message", ({ to, message, displayName }) => {
     io.to(to).emit("chat-message", {
       message,
@@ -74,12 +74,16 @@ io.on("connection", (socket) => {
     });
   });
 
+  // ---------------- SKIP ----------------
   socket.on("skip", () => {
     const partnerId = activePairs.get(socket.id);
 
     if (partnerId) {
       io.to(partnerId).emit("partner-disconnected");
+
       activePairs.delete(partnerId);
+      activePairs.delete(socket.id);
+    } else {
       activePairs.delete(socket.id);
     }
 
@@ -87,6 +91,7 @@ io.on("connection", (socket) => {
     socket.emit("skipped");
   });
 
+  // ---------------- DISCONNECT ----------------
   socket.on("disconnect", () => {
     const partnerId = activePairs.get(socket.id);
 
@@ -102,7 +107,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ IMPORTANT FIX FOR RENDER
+// ---------------- START SERVER ----------------
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, "0.0.0.0", () => {
