@@ -258,32 +258,43 @@
   </div>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut as fbSignOut }
-      from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, addDoc, collection, serverTimestamp }
-      from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-    import { firebaseConfig, BACKEND_URL } from "./js/config.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut as fbSignOut }
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, addDoc, collection, serverTimestamp }
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { firebaseConfig, BACKEND_URL } from "./js/config.js";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    let currentUser = null, userData = null;
-    let socket = null, pc = null;
-    let localStream = null, partnerId = null, partnerName = "Stranger";
+let currentUser = null;
+let userData = null;
 
-    window.currentChatPartner = null;
+let socket = null;
+let pc = null;
 
-    let camOn = true, micOn = true, screenSharing = false;
-    let selectedReason = "";
+let localStream = null;
+let partnerId = null;
+let partnerName = "Stranger";
 
-    const ICE_SERVERS = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+window.currentChatPartner = null;
 
-    // --- Auth ---
+// media state
+let camOn = true;
+let micOn = true;
+let screenSharing = false;
+
+let selectedReason = "";
+
+const ICE_SERVERS = {
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+};
+
 let authReady = false;
 
+// ---------------- AUTH ----------------
 onAuthStateChanged(auth, async (user) => {
   authReady = true;
 
@@ -291,35 +302,37 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "index.html";
     return;
   }
-      currentUser = user;
-      const snap = await getDoc(doc(db, "users", user.uid));
-      userData = snap.exists() ? snap.data() : { role: "user", displayName: user.displayName || "User" };
 
-      document.getElementById("user-name").textContent = userData.displayName;
-      const roleEl = document.getElementById("role-display");
-      roleEl.textContent = userData.role;
-      roleEl.className = `role-badge role-${userData.role}`;
+  currentUser = user;
 
-      const staffRoles = ["moderator", "admin", "manager", "founder"];
-      if (staffRoles.includes(userData.role)) {
-        document.getElementById("admin-btn").style.display = "flex";
-      }
+  const snap = await getDoc(doc(db, "users", user.uid));
+  userData = snap.exists()
+    ? snap.data()
+    : { role: "user", displayName: "User" };
 
-      initSocket();
-    });
+  document.getElementById("user-name").textContent = userData.displayName;
 
+  const roleEl = document.getElementById("role-display");
+  roleEl.textContent = userData.role;
+  roleEl.className = `role-badge role-${userData.role}`;
+
+  const staffRoles = ["moderator", "admin", "manager", "founder"];
+  if (staffRoles.includes(userData.role)) {
+    document.getElementById("admin-btn").style.display = "flex";
+  }
+
+  initSocket();
+});
+
+// ---------------- SOCKET ----------------
 function initSocket() {
   socket = window.io(BACKEND_URL, {
     transports: ["websocket", "polling"]
   });
 
-  socket.on("connect", () => {
-    console.log("Connected to backend:", socket.id);
-  });
-
   socket.on("waiting", () => {
-    document.getElementById("waiting-text").textContent = "Looking for someone...";
-    document.getElementById("remote-status-text").textContent = "Searching...";
+    document.getElementById("waiting-text").textContent =
+      "Looking for someone...";
   });
 
   socket.on("matched", async ({ partnerId: pid, initiator, partnerName: pn }) => {
@@ -329,9 +342,9 @@ function initSocket() {
 
     document.getElementById("remote-label").textContent = partnerName;
     document.getElementById("remote-status").classList.add("hidden");
-    document.getElementById("waiting-text").textContent = `Connected to ${partnerName}`;
 
     addSysMsg(`Connected to ${partnerName}`);
+
     await setupPeer(initiator);
   });
 
@@ -352,63 +365,76 @@ function initSocket() {
     }
   });
 
-  socket.on("chat-message", ({ message, displayName }) => {
-    addMsg(message, displayName, "theirs");
-  });
-
   socket.on("partner-disconnected", () => {
     addSysMsg("Partner disconnected.");
     resetPeer();
+
     document.getElementById("remote-status").classList.remove("hidden");
-    document.getElementById("remote-status-text").textContent = "Press Next to find someone new";
-    document.getElementById("waiting-text").textContent = "Disconnected";
+    document.getElementById("remote-status-text").textContent =
+      "Press Next to find someone new";
+
     partnerId = null;
     window.currentChatPartner = null;
   });
 
   socket.on("skipped", () => {
     resetPeer();
-    document.getElementById("remote-status-text").textContent = "Searching...";
+    partnerId = null;
     window.currentChatPartner = null;
   });
 }
 
-    async function setupPeer(initiator) {
-      pc = new RTCPeerConnection(ICE_SERVERS);
-      if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+// ---------------- PEER ----------------
+async function setupPeer(initiator) {
+  pc = new RTCPeerConnection(ICE_SERVERS);
 
-      pc.ontrack = (e) => {
-        document.getElementById("remote-video").srcObject = e.streams[0];
-      };
-      pc.onicecandidate = (e) => {
-        if (e.candidate) socket.emit("signal", { to: partnerId, data: e.candidate });
-      };
-      pc.onconnectionstatechange = () => {
-        if (["disconnected","failed","closed"].includes(pc.connectionState)) {
-          addSysMsg("Connection lost.");
-        }
-      };
-
-      if (initiator) {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        socket.emit("signal", { to: partnerId, data: offer });
-      }
-    }
-
-    function resetPeer() {
-      if (pc) { pc.close(); pc = null; }
-      document.getElementById("remote-video").srcObject = null;
-      window.currentChatPartner = null;
-    }
-
-// --- Controls ---
-
-window.startChat = async () => {
-  if (!authReady || !socket || !currentUser || !userData) {
-    addSysMsg("Still loading... try again in a second.");
-    return;
+  if (localStream) {
+    localStream.getTracks().forEach(track => {
+      pc.addTrack(track, localStream);
+    });
   }
+
+  pc.ontrack = (e) => {
+    if (e.streams && e.streams[0]) {
+      document.getElementById("remote-video").srcObject = e.streams[0];
+    }
+  };
+
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      socket.emit("signal", {
+        to: partnerId,
+        data: e.candidate
+      });
+    }
+  };
+
+  pc.onconnectionstatechange = () => {
+    if (["failed", "disconnected", "closed"].includes(pc.connectionState)) {
+      addSysMsg("Connection lost.");
+    }
+  };
+
+  if (initiator) {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socket.emit("signal", { to: partnerId, data: offer });
+  }
+}
+
+// ---------------- RESET ----------------
+function resetPeer() {
+  if (pc) {
+    pc.close();
+    pc = null;
+  }
+
+  document.getElementById("remote-video").srcObject = null;
+}
+
+// ---------------- START ----------------
+window.startChat = async () => {
+  if (!authReady || !socket || !currentUser || !userData) return;
 
   document.getElementById("start-btn").classList.add("hidden");
   document.getElementById("next-btn").classList.remove("hidden");
@@ -417,11 +443,16 @@ window.startChat = async () => {
   document.getElementById("screen-btn").classList.remove("hidden");
 
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: camOn,
+      audio: micOn
+    });
+
     document.getElementById("local-video").srcObject = localStream;
     document.getElementById("local-status").classList.add("hidden");
+
   } catch (e) {
-    addSysMsg("Camera/mic denied — connecting without.");
+    addSysMsg("No camera/mic access — text mode only.");
     localStream = null;
   }
 
@@ -431,14 +462,17 @@ window.startChat = async () => {
   });
 };
 
+// ---------------- NEXT ----------------
 window.nextPartner = () => {
-  addSysMsg("Looking for next person...");
+  addSysMsg("Searching new partner...");
+
   socket.emit("skip");
+
+  resetPeer();
 
   partnerId = null;
 
   document.getElementById("remote-video").srcObject = null;
-  document.getElementById("remote-label").textContent = "Stranger";
   document.getElementById("remote-status").classList.remove("hidden");
 
   socket.emit("find-partner", {
@@ -446,118 +480,177 @@ window.nextPartner = () => {
     displayName: userData.displayName
   });
 };
+
+// ---------------- CAMERA ----------------
 window.toggleCamera = () => {
   if (!localStream) return;
 
   camOn = !camOn;
-  localStream.getVideoTracks().forEach(t => t.enabled = camOn);
 
-  const btn = document.getElementById("cam-btn");
-  btn.classList.toggle("muted", !camOn);
-  btn.textContent = camOn ? "📷 Camera" : "📷 Off";
+  const track = localStream.getVideoTracks()[0];
+  if (track) track.enabled = camOn;
+
+  document.getElementById("cam-btn").classList.toggle("muted", !camOn);
+  document.getElementById("cam-btn").textContent =
+    camOn ? "📷 Camera" : "📷 Off";
 
   document.getElementById("local-status").classList.toggle("hidden", camOn);
 };
 
+// ---------------- MIC ----------------
 window.toggleMic = () => {
   if (!localStream) return;
 
   micOn = !micOn;
-  localStream.getAudioTracks().forEach(t => t.enabled = micOn);
 
-  const btn = document.getElementById("mic-btn");
-  btn.classList.toggle("muted", !micOn);
-  btn.textContent = micOn ? "🎙 Mic" : "🎙 Off";
+  const track = localStream.getAudioTracks()[0];
+  if (track) track.enabled = micOn;
+
+  document.getElementById("mic-btn").classList.toggle("muted", !micOn);
+  document.getElementById("mic-btn").textContent =
+    micOn ? "🎙 Mic" : "🎙 Off";
 };
 
-    window.toggleScreen = async () => {
-      if (!pc) return;
-      try {
-        if (!screenSharing) {
-          const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-          const screenTrack = screenStream.getVideoTracks()[0];
-          const sender = pc.getSenders().find(s => s.track?.kind === "video");
-          if (sender) sender.replaceTrack(screenTrack);
-          document.getElementById("local-video").srcObject = screenStream;
-          document.getElementById("screen-btn").classList.add("active");
-          document.getElementById("screen-btn").textContent = "🖥 Stop";
-          screenSharing = true;
-          screenTrack.onended = () => stopScreen();
-        } else { stopScreen(); }
-      } catch (e) { addSysMsg("Screen share cancelled."); }
-    };
+// ---------------- SCREEN SHARE ----------------
+window.toggleScreen = async () => {
+  if (!pc) return;
 
-    async function stopScreen() {
-      screenSharing = false;
-      if (localStream) {
-        document.getElementById("local-video").srcObject = localStream;
-        const sender = pc?.getSenders().find(s => s.track?.kind === "video");
-        if (sender) sender.replaceTrack(localStream.getVideoTracks()[0]);
-      }
-      document.getElementById("screen-btn").classList.remove("active");
-      document.getElementById("screen-btn").textContent = "🖥 Screen";
-    }
-
-    // --- Chat ---
-    window.sendMessage = () => {
-      const input = document.getElementById("chat-input");
-      const msg = input.value.trim();
-      if (!msg || !partnerId) return;
-      socket.emit("chat-message", { to: partnerId, message: msg, displayName: userData.displayName });
-      addMsg(msg, "You", "mine");
-      input.value = "";
-    };
-    window.onChatKey = (e) => { if (e.key === "Enter") sendMessage(); };
-
-    function addMsg(text, name, type) {
-      const box = document.getElementById("messages");
-      const div = document.createElement("div");
-      div.className = `msg-item ${type}`;
-      div.innerHTML = type !== "system" ? `<div class="msg-name">${name}</div><div>${escHtml(text)}</div>` : escHtml(text);
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
-    }
-    function addSysMsg(text) { addMsg(text, "", "system"); }
-    function escHtml(t) { return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-
-    // --- Report ---
-    window.showPanel = (p) => {
-      document.querySelectorAll(".stab").forEach((t,i) => t.classList.toggle("active", (p === "chat" && i===0)||(p==="report"&&i===1)));
-      document.getElementById("chat-panel").classList.toggle("hidden", p !== "chat");
-      document.getElementById("report-panel").classList.toggle("hidden", p !== "report");
-    };
-
-    window.selectReason = (btn, reason) => {
-      document.querySelectorAll(".reason-btn").forEach(b => b.classList.remove("selected"));
-      btn.classList.add("selected");
-      selectedReason = reason;
-    };
-
-    window.submitReport = async () => {
-      if (!selectedReason) { alert("Please select a reason."); return; }
-      const notes = document.getElementById("report-notes").value.trim();
-      await addDoc(collection(db, "reports"), {
-        reporterId: currentUser.uid,
-        reporterName: userData.displayName,
-        reportedUserId: partnerId,
-	reportedUserName: partnerName,
-	reportedSocketId: partnerId,
-        reason: selectedReason,
-        notes,
-        status: "pending",
-        createdAt: serverTimestamp(),
+  try {
+    if (!screenSharing) {
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true
       });
-      addSysMsg("Report submitted. Thank you.");
-      document.querySelectorAll(".reason-btn").forEach(b => b.classList.remove("selected"));
-      document.getElementById("report-notes").value = "";
-      selectedReason = "";
-      showPanel("chat");
-    };
 
-    // --- Sign Out ---
-    window.signOut = () => document.getElementById("signout-modal").classList.add("open");
-    window.closeModal = () => document.getElementById("signout-modal").classList.remove("open");
-    window.confirmSignOut = async () => { await fbSignOut(auth); window.location.href = "index.html"; };
+      const screenTrack = screenStream.getVideoTracks()[0];
+
+      const sender = pc.getSenders().find(s => s.track?.kind === "video");
+
+      if (sender) await sender.replaceTrack(screenTrack);
+
+      document.getElementById("local-video").srcObject = screenStream;
+
+      screenSharing = true;
+
+      document.getElementById("screen-btn").classList.add("active");
+      document.getElementById("screen-btn").textContent = "🖥 Stop";
+
+      screenTrack.onended = stopScreen;
+
+    } else {
+      stopScreen();
+    }
+  } catch (e) {
+    addSysMsg("Screen share cancelled.");
+  }
+};
+
+async function stopScreen() {
+  screenSharing = false;
+
+  const videoTrack = localStream?.getVideoTracks()[0];
+  const sender = pc?.getSenders().find(s => s.track?.kind === "video");
+
+  if (sender && videoTrack) {
+    await sender.replaceTrack(videoTrack);
+  }
+
+  document.getElementById("local-video").srcObject = localStream;
+
+  document.getElementById("screen-btn").classList.remove("active");
+  document.getElementById("screen-btn").textContent = "🖥 Screen";
+}
+
+// ---------------- CHAT ----------------
+window.sendMessage = () => {
+  const input = document.getElementById("chat-input");
+  const msg = input.value.trim();
+
+  if (!msg || !partnerId) return;
+
+  socket.emit("chat-message", {
+    to: partnerId,
+    message: msg,
+    displayName: userData.displayName
+  });
+
+  addMsg(msg, "You", "mine");
+  input.value = "";
+};
+
+window.onChatKey = (e) => {
+  if (e.key === "Enter") sendMessage();
+};
+
+// ---------------- UI HELPERS ----------------
+function addMsg(text, name, type) {
+  const box = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = `msg-item ${type}`;
+
+  div.innerHTML =
+    type !== "system"
+      ? `<div class="msg-name">${name}</div><div>${esc(text)}</div>`
+      : esc(text);
+
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function addSysMsg(text) {
+  addMsg(text, "", "system");
+}
+
+function esc(t) {
+  return t.replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+}
+
+// ---------------- REPORT ----------------
+window.selectReason = (btn, reason) => {
+  document.querySelectorAll(".reason-btn").forEach(b =>
+    b.classList.remove("selected")
+  );
+
+  btn.classList.add("selected");
+  selectedReason = reason;
+};
+
+window.submitReport = async () => {
+  if (!selectedReason) return alert("Select reason");
+
+  const notes = document.getElementById("report-notes").value.trim();
+
+  await addDoc(collection(db, "reports"), {
+    reporterId: currentUser.uid,
+    reporterName: userData.displayName,
+    reportedUserId: partnerId,
+    reportedUserName: partnerName,
+    reportedSocketId: partnerId,
+    reason: selectedReason,
+    notes,
+    status: "pending",
+    createdAt: serverTimestamp()
+  });
+
+  addSysMsg("Report sent.");
+
+  selectedReason = "";
+  document.getElementById("report-notes").value = "";
+  showPanel("chat");
+};
+
+// ---------------- SIGN OUT ----------------
+window.signOut = () =>
+  document.getElementById("signout-modal").classList.add("open");
+
+window.closeModal = () =>
+  document.getElementById("signout-modal").classList.remove("open");
+
+window.confirmSignOut = async () => {
+  await fbSignOut(auth);
+  window.location.href = "index.html";
+};
   </script>
 </body>
 </html>

@@ -2,166 +2,169 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Nexara — Staff Panel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0f; --surface: #12121a; --border: #1e1e2e;
-      --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e2f0;
-      --muted: #6b6b8a; --danger: #ef4444; --success: #22c55e;
+      --bg:#0a0a0f; --surface:#12121a; --border:#1e1e2e;
+      --accent:#7c3aed; --accent2:#06b6d4; --text:#e2e2f0;
+      --muted:#6b6b8a; --danger:#ef4444; --success:#22c55e;
     }
-    body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+    }
 
     header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 28px; border-bottom: 1px solid var(--border); background: var(--surface);
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 28px;
+      background:var(--surface);
+      border-bottom:1px solid var(--border);
     }
-    .logo-sm { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .back-btn {
-      padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--bg); color: var(--muted); font-family: 'DM Mono', monospace;
-      font-size: 0.8rem; cursor: pointer; transition: all 0.2s; text-decoration: none;
-      display: inline-flex; align-items: center; gap: 6px;
+
+    .logo { font-family:Syne; font-weight:800; }
+
+    .container {
+      max-width:1100px;
+      margin:0 auto;
+      padding:30px 20px;
     }
-    .back-btn:hover { border-color: var(--accent); color: var(--text); }
 
-    .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
-    h1 { font-family: 'Syne', sans-serif; font-size: 1.6rem; margin-bottom: 6px; }
-    .subtitle { color: var(--muted); font-size: 0.8rem; margin-bottom: 30px; }
+    h1 { font-family:Syne; margin-bottom:6px; }
 
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 32px; }
-    .stat-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+    .subtitle { color:var(--muted); font-size:0.8rem; margin-bottom:25px; }
+
+    .section {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:12px;
+      margin-bottom:20px;
+      overflow:hidden;
     }
-    .stat-card .num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
-    .stat-card .lbl { color: var(--muted); font-size: 0.72rem; margin-top: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
-    .stat-card.pending .num { color: #facc15; }
-    .stat-card.resolved .num { color: var(--success); }
-    .stat-card.users .num { color: var(--accent2); }
 
-    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 28px; overflow: hidden; }
-    .section-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .section-header h2 { font-family: 'Syne', sans-serif; font-size: 1rem; }
-
-    .filter-tabs { display: flex; gap: 6px; }
-    .ftab {
-      padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
-      background: transparent; color: var(--muted); font-family: 'DM Mono', monospace;
-      font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
+    .section-header {
+      padding:16px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
     }
-    .ftab.active { background: rgba(124,58,237,0.15); border-color: var(--accent); color: #c4b5fd; }
 
-    table { width: 100%; border-collapse: collapse; }
-    th { padding: 12px 20px; text-align: left; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-    td { padding: 14px 20px; border-bottom: 1px solid rgba(30,30,46,0.5); font-size: 0.82rem; vertical-align: top; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(124,58,237,0.03); }
+    table { width:100%; border-collapse:collapse; }
+
+    th, td {
+      padding:12px;
+      border-bottom:1px solid #1a1a25;
+      font-size:0.8rem;
+      text-align:left;
+    }
+
+    th { color:var(--muted); font-size:0.7rem; text-transform:uppercase; }
 
     .badge {
-      display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.68rem;
-      text-transform: uppercase; letter-spacing: 0.08em;
-    }
-    .badge.pending { background: rgba(234,179,8,0.15); color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
-    .badge.resolved { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
-    .badge.dismissed { background: rgba(107,107,138,0.15); color: var(--muted); border: 1px solid rgba(107,107,138,0.3); }
-
-    .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-    .act-btn {
-      padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
-      background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace;
-      font-size: 0.72rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;
-    }
-    .act-btn:hover { border-color: var(--accent); }
-    .act-btn.ban { border-color: rgba(239,68,68,0.3); color: #f87171; }
-    .act-btn.ban:hover { background: rgba(239,68,68,0.1); }
-    .act-btn.resolve { border-color: rgba(34,197,94,0.3); color: var(--success); }
-    .act-btn.resolve:hover { background: rgba(34,197,94,0.1); }
-
-    .report-reason { color: var(--text); }
-    .report-notes-text { color: var(--muted); font-size: 0.75rem; margin-top: 4px; font-style: italic; }
-    .meta { color: var(--muted); font-size: 0.72rem; }
-
-    /* USER MGMT */
-    .user-search { display: flex; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
-    .user-search input {
-      flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-      padding: 9px 12px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.85rem; outline: none;
-    }
-    .user-search input:focus { border-color: var(--accent); }
-    .search-btn {
-      padding: 9px 18px; border-radius: 8px; border: none;
-      background: var(--accent); color: white; font-family: 'DM Mono', monospace;
-      font-size: 0.82rem; cursor: pointer;
+      padding:3px 8px;
+      border-radius:20px;
+      font-size:0.7rem;
     }
 
-    .role-select {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.75rem; padding: 4px 8px; outline: none;
+    .pending { background:rgba(250,204,21,0.15); color:#facc15; }
+    .resolved { background:rgba(34,197,94,0.15); color:var(--success); }
+    .dismissed { background:rgba(107,107,138,0.15); color:var(--muted); }
+
+    button {
+      cursor:pointer;
+      border:none;
+      padding:6px 10px;
+      border-radius:6px;
+      font-size:0.75rem;
+      font-family:inherit;
     }
 
-    .empty { padding: 40px; text-align: center; color: var(--muted); font-size: 0.85rem; }
-    .loading { padding: 40px; text-align: center; color: var(--muted); font-size: 0.8rem; }
+    .resolve { background:rgba(34,197,94,0.2); color:var(--success); }
+    .ban { background:rgba(239,68,68,0.2); color:#f87171; }
 
-    #access-denied { display: none; text-align: center; padding: 80px 20px; }
-    #access-denied h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; color: var(--danger); margin-bottom: 10px; }
-    #access-denied p { color: var(--muted); font-size: 0.85rem; }
+    .search {
+      display:flex;
+      gap:10px;
+      padding:12px;
+      border-bottom:1px solid var(--border);
+    }
+
+    input {
+      flex:1;
+      padding:8px;
+      background:var(--bg);
+      border:1px solid var(--border);
+      color:var(--text);
+      border-radius:6px;
+    }
+
+    #access { display:none; text-align:center; padding:60px; color:var(--danger); }
   </style>
 </head>
+
 <body>
-  <header>
-    <span class="logo-sm">Admin Panel</span>
-    <a class="back-btn" href="chat.html">← Back to Chat</a>
-  </header>
 
-  <div id="access-denied">
-    <h2>Access Denied</h2>
-    <p>You don't have permission to view this page.</p>
+<header>
+  <div class="logo">Nexara</div>
+  <a href="chat.html" style="color:var(--muted); text-decoration:none;">Back</a>
+</header>
+
+<div id="access">
+  <h2>Access Denied</h2>
+</div>
+
+<div class="container" id="app" style="display:none">
+
+  <h1>Staff Dashboard</h1>
+  <div class="subtitle" id="sub">Loading...</div>
+
+  <div class="section">
+    <div class="section-header">
+      <strong>Reports</strong>
+    </div>
+    <div id="reports">Loading...</div>
   </div>
 
-  <div class="container" id="panel-content" style="display:none">
-    <h1>Staff Panel</h1>
-    <p class="subtitle" id="panel-subtitle">Loading...</p>
-
-    <div class="stats">
-      <div class="stat-card pending"><div class="num" id="stat-pending">—</div><div class="lbl">Pending Reports</div></div>
-      <div class="stat-card resolved"><div class="num" id="stat-resolved">—</div><div class="lbl">Resolved</div></div>
-      <div class="stat-card users"><div class="num" id="stat-users">—</div><div class="lbl">Total Users</div></div>
+  <div class="section">
+    <div class="section-header">
+      <strong>User Search</strong>
     </div>
 
-    <!-- Reports -->
-    <div class="section">
-      <div class="section-header">
-        <h2>📋 Reports</h2>
-        <div class="filter-tabs">
-          <button class="ftab active" onclick="filterReports('pending')">Pending</button>
-          <button class="ftab" onclick="filterReports('all')">All</button>
-          <button class="ftab" onclick="filterReports('resolved')">Resolved</button>
-        </div>
-      </div>
-      <div id="reports-container"><div class="loading">Loading reports...</div></div>
+    <div class="search">
+      <input id="searchInput" placeholder="email or username"/>
+      <button onclick="searchUsers()">Search</button>
     </div>
 
-    <!-- User Management (admin+ only) -->
-    <div class="section" id="user-section">
-      <div class="section-header"><h2>👥 User Management</h2></div>
-      <div class="user-search">
-        <input type="text" id="user-search-input" placeholder="Search by email or username..." />
-        <button class="search-btn" onclick="searchUsers()">Search</button>
-      </div>
-      <div id="users-container"><div class="loading">Search for a user above.</div></div>
-    </div>
+    <div id="users"></div>
   </div>
 
-  <script type="module">
+</div>
+
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, getDocs, updateDoc,
-  collection, query, where, orderBy, limit, serverTimestamp
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  updateDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 import { firebaseConfig } from "./js/config.js";
@@ -170,142 +173,114 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const STAFF_ROLES = ["moderator", "admin", "manager", "founder"];
+const STAFF = ["moderator","admin","manager","founder"];
 
-let currentUserData = null;
-let allReports = [];
-let currentFilter = "pending";
+let me = null;
 
 // ---------------- AUTH ----------------
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return (window.location.href = "index.html");
+  if (!user) return location.href = "index.html";
 
-  const snap = await getDoc(doc(db, "users", user.uid));
-  currentUserData = snap.exists() ? snap.data() : null;
+  const snap = await getDoc(doc(db,"users",user.uid));
+  me = snap.data();
 
-  if (!currentUserData || !STAFF_ROLES.includes(currentUserData.role)) {
-    document.getElementById("access-denied").style.display = "block";
+  if (!me || !STAFF.includes(me.role)) {
+    document.getElementById("access").style.display = "block";
     return;
   }
 
-  document.getElementById("panel-content").style.display = "block";
-  document.getElementById("panel-subtitle").textContent =
-    `Logged in as ${currentUserData.displayName} · Role: ${currentUserData.role.toUpperCase()}`;
+  document.getElementById("app").style.display = "block";
+  document.getElementById("sub").textContent =
+    `Logged in as ${me.displayName} (${me.role})`;
 
-  await loadReports();
+  loadReports();
 });
 
 // ---------------- REPORTS ----------------
 async function loadReports() {
-  let q;
-
-  if (currentFilter === "pending") {
-    q = query(collection(db, "reports"), where("status", "==", "pending"), orderBy("createdAt", "desc"), limit(50));
-  } else if (currentFilter === "resolved") {
-    q = query(collection(db, "reports"), where("status", "==", "resolved"), orderBy("createdAt", "desc"), limit(50));
-  } else {
-    q = query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(50));
-  }
+  const q = query(
+    collection(db,"reports"),
+    orderBy("createdAt","desc"),
+    limit(50)
+  );
 
   const snap = await getDocs(q);
-  allReports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  renderReports();
-}
 
-function renderReports() {
-  const c = document.getElementById("reports-container");
+  const reports = snap.docs.map(d => ({id:d.id,...d.data()}));
 
-  if (!allReports.length) {
-    c.innerHTML = `<div class="empty">No reports.</div>`;
-    return;
-  }
-
-  c.innerHTML = `
+  document.getElementById("reports").innerHTML = `
     <table>
-      <thead>
+      <tr>
+        <th>Reason</th>
+        <th>Reporter</th>
+        <th>Reported</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+
+      ${reports.map(r => `
         <tr>
-          <th>Reason</th>
-          <th>Reporter</th>
-          <th>Reported User</th>
-          <th>Time</th>
-          <th>Status</th>
-          <th>Actions</th>
+          <td>${r.reason || "—"}</td>
+          <td>${r.reporterName || "—"}</td>
+          <td>${r.reportedUserName || r.reportedSocketId || "—"}</td>
+          <td><span class="badge ${r.status}">${r.status}</span></td>
+          <td>
+            <button onclick="viewChats('${r.reporterId}','${r.reportedUserId}')">Chats</button>
+
+            ${r.status==="pending" ? `
+              <button class="resolve" onclick="setStatus('${r.id}','resolved')">Resolve</button>
+              <button class="ban" onclick="setStatus('${r.id}','dismissed')">Dismiss</button>
+            ` : ""}
+          </td>
         </tr>
-      </thead>
-
-      <tbody>
-        ${allReports.map(r => `
-          <tr>
-            <td>
-              <div class="report-reason">${r.reason || "—"}</div>
-              ${r.notes ? `<div class="report-notes-text">${r.notes}</div>` : ""}
-            </td>
-
-            <td class="meta">${r.reporterName || "—"}</td>
-
-            <td class="meta">
- 		 ${r.reportedSocketId || "Unknown"}
-	    </td>
-
-            <td class="meta">
-              ${
-                r.createdAt?.seconds
-                  ? new Date(r.createdAt.seconds * 1000).toLocaleString()
-                  : "—"
-              }
-            </td>
-
-            <td>
-              <span class="badge ${r.status}">${r.status}</span>
-            </td>
-
-            <td>
-              <div class="action-btns">
-
-                <button class="act-btn" onclick="viewChats('${r.reporterId}', '${r.reportedUserId || ""}')">
-                  View Chats
-                </button>
-
-                ${r.status === "pending" ? `
-                  <button class="act-btn resolve" onclick="updateReport('${r.id}', 'resolved')">Resolve</button>
-                  <button class="act-btn ban" onclick="updateReport('${r.id}', 'dismissed')">Dismiss</button>
-                ` : ""}
-              </div>
-            </td>
-          </tr>
-        `).join("")}
-      </tbody>
+      `).join("")}
     </table>
   `;
 }
 
-// ---------------- UPDATE REPORT ----------------
-window.updateReport = async (id, status) => {
-  await updateDoc(doc(db, "reports", id), {
+// ---------------- UPDATE ----------------
+window.setStatus = async (id,status) => {
+  await updateDoc(doc(db,"reports",id),{
     status,
-    resolvedBy: currentUserData.displayName,
+    resolvedBy: me.displayName,
     resolvedAt: serverTimestamp()
   });
 
-  await loadReports();
+  loadReports();
 };
 
-// ---------------- CHAT VIEWER (last 10 messages) ----------------
-// expects you have a "chats" collection like:
-// chats/{chatId}/messages
+// ---------------- SEARCH USERS ----------------
+window.searchUsers = async () => {
+  const val = document.getElementById("searchInput").value.trimyou're gonna stress me out.();
+  if (!val) return;
 
-window.viewChats = async (userA, userB) => {
-  if (!userA || !userB) {
-    alert("No chat data available for this report.");
-    return;
-  }
+  const q = query(
+    collection(db,"users"),
+    where("displayName","==",val),
+    limit(10)
+  );
 
-  const chatId = [userA, userB].sort().join("_");
+  const snap = await getDocs(q);
+
+  document.getElementById("users").innerHTML =
+    snap.docs.map(d => {
+      const u = d.data();
+      return `<div style="padding:10px;border-bottom:1px solid #222">
+        <b>${u.displayName}</b> — ${u.email || "no email"}
+      </div>`;
+    }).join("") || "No users found";
+};
+
+// ---------------- CHAT VIEW ----------------
+window.viewChats = async (a,b) => {
+  if (!a || !b) return alert("Missing chat data");
+
+  const chatId = [a,b].sort().join("_");
 
   const snap = await getDocs(
     query(
-      collection(db, "chats", chatId, "messages"),
-      orderBy("createdAt", "desc"),
+      collection(db,"chats",chatId,"messages"),
+      orderBy("createdAt","desc"),
       limit(10)
     )
   );
@@ -315,16 +290,10 @@ window.viewChats = async (userA, userB) => {
   alert(
     msgs.length
       ? msgs.map(m => `${m.senderName}: ${m.message}`).join("\n")
-      : "No messages found."
+      : "No messages"
   );
 };
-
-// ---------------- FILTER ----------------
-window.filterReports = async (f) => {
-  currentFilter = f;
-  await loadReports();
-};
-
 </script>
+
 </body>
 </html>

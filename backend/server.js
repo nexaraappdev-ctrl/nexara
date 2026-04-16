@@ -20,23 +20,36 @@ app.get("/", (req, res) =>
   res.json({ status: "Nexara backend running" })
 );
 
-// --- Matchmaking queue ---
+// ---------------- STATE ----------------
 const waitingUsers = [];
-const activePairs = new Map();
+const activePairs = new Map(); // socketId -> partnerId
 
 function removeFromQueue(socketId) {
   const idx = waitingUsers.findIndex((u) => u.socketId === socketId);
   if (idx !== -1) waitingUsers.splice(idx, 1);
 }
 
+function clearPair(socketId) {
+  const partnerId = activePairs.get(socketId);
+
+  if (partnerId) {
+    activePairs.delete(partnerId);
+    activePairs.delete(socketId);
+    return partnerId;
+  }
+
+  activePairs.delete(socketId);
+  return null;
+}
+
+// ---------------- SOCKET ----------------
 io.on("connection", (socket) => {
   console.log("Connected:", socket.id);
 
   // ---------------- MATCHMAKING ----------------
-  socket.on("find-partner", (userData) => {
+  socket.on("find-partner", (userData = {}) => {
     removeFromQueue(socket.id);
 
-    // FIFO matchmaking (FIXED)
     const partner = waitingUsers.shift();
 
     if (partner && partner.socketId !== socket.id) {
@@ -46,27 +59,38 @@ io.on("connection", (socket) => {
       io.to(socket.id).emit("matched", {
         partnerId: partner.socketId,
         initiator: true,
-        partnerName: partner.displayName,
+        partnerName: partner.displayName || "Stranger",
       });
 
       io.to(partner.socketId).emit("matched", {
         partnerId: socket.id,
         initiator: false,
-        partnerName: userData.displayName,
+        partnerName: userData.displayName || "Stranger",
       });
+
     } else {
-      waitingUsers.push({ socketId: socket.id, ...userData });
+      waitingUsers.push({
+        socketId: socket.id,
+        displayName: userData.displayName || "Stranger",
+      });
+
       socket.emit("waiting");
     }
   });
 
   // ---------------- WEBRTC SIGNALING ----------------
   socket.on("signal", ({ to, data }) => {
-    io.to(to).emit("signal", { from: socket.id, data });
+    if (!to) return;
+    io.to(to).emit("signal", {
+      from: socket.id,
+      data,
+    });
   });
 
   // ---------------- CHAT ----------------
   socket.on("chat-message", ({ to, message, displayName }) => {
+    if (!to) return;
+
     io.to(to).emit("chat-message", {
       message,
       displayName,
@@ -76,34 +100,28 @@ io.on("connection", (socket) => {
 
   // ---------------- SKIP ----------------
   socket.on("skip", () => {
-    const partnerId = activePairs.get(socket.id);
+    const partnerId = clearPair(socket.id);
 
     if (partnerId) {
       io.to(partnerId).emit("partner-disconnected");
-
-      activePairs.delete(partnerId);
-      activePairs.delete(socket.id);
-    } else {
-      activePairs.delete(socket.id);
     }
 
     removeFromQueue(socket.id);
+
     socket.emit("skipped");
   });
 
   // ---------------- DISCONNECT ----------------
   socket.on("disconnect", () => {
-    const partnerId = activePairs.get(socket.id);
+    console.log("Disconnected:", socket.id);
+
+    const partnerId = clearPair(socket.id);
 
     if (partnerId) {
       io.to(partnerId).emit("partner-disconnected");
-      activePairs.delete(partnerId);
     }
 
-    activePairs.delete(socket.id);
     removeFromQueue(socket.id);
-
-    console.log("Disconnected:", socket.id);
   });
 });
 
