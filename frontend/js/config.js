@@ -1,21 +1,21 @@
 // =====================================================
 // FILL IN YOUR FIREBASE CONFIG HERE
-// Go to: Firebase Console > Project Settings > Your apps
 // =====================================================
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyA2oiPQPJXLJMftO5iZ82Zd6Z00UfMLhF0",
+  authDomain: "nexara-bfb67.firebaseapp.com",
+  projectId: "nexara-bfb67",
+  storageBucket: "nexara-bfb67.firebasestorage.app",
+  messagingSenderId: "1039460241777",
+  appId: "1:1039460241777:web:22eb20c4e6ca8d3f6766d0",
+  measurementId: "G-010THJ7J1Y"
 };
 
 // =====================================================
 // FILL IN YOUR RENDER BACKEND URL HERE
-// e.g. "https://your-app.onrender.com"
 // =====================================================
-const BACKEND_URL = "https://YOUR-RENDER-APP.onrender.com";
+
+const BACKEND_URL = "https://nexara-9rgc.onrender.com";
 
 export { firebaseConfig, BACKEND_URL };

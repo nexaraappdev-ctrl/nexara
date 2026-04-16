@@ -298,50 +298,67 @@
       initSocket();
     });
 
-    function initSocket() {
-      socket = io(BACKEND_URL);
-      socket.on("waiting", () => {
-        document.getElementById("waiting-text").textContent = "Looking for someone...";
-        document.getElementById("remote-status-text").textContent = "Searching...";
-      });
-      socket.on("matched", async ({ partnerId: pid, initiator, partnerName: pn }) => {
-        partnerId = pid;
-        partnerName = pn || "Stranger";
-        document.getElementById("remote-label").textContent = partnerName;
-        document.getElementById("remote-status").classList.add("hidden");
-        document.getElementById("waiting-text").textContent = `Connected to ${partnerName}`;
-        addSysMsg(`Connected to ${partnerName}`);
-        await setupPeer(initiator);
-      });
-      socket.on("signal", async ({ from, data }) => {
-        if (!pc) return;
-        if (data.type === "offer") {
-          await pc.setRemoteDescription(new RTCSessionDescription(data));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          socket.emit("signal", { to: from, data: answer });
-        } else if (data.type === "answer") {
-          await pc.setRemoteDescription(new RTCSessionDescription(data));
-        } else if (data.candidate) {
-          await pc.addIceCandidate(new RTCIceCandidate(data));
-        }
-      });
-      socket.on("chat-message", ({ message, displayName }) => {
-        addMsg(message, displayName, "theirs");
-      });
-      socket.on("partner-disconnected", () => {
-        addSysMsg("Partner disconnected.");
-        resetPeer();
-        document.getElementById("remote-status").classList.remove("hidden");
-        document.getElementById("remote-status-text").textContent = "Press Next to find someone new";
-        document.getElementById("waiting-text").textContent = "Disconnected";
-        partnerId = null;
-      });
-      socket.on("skipped", () => {
-        resetPeer();
-        document.getElementById("remote-status-text").textContent = "Searching...";
-      });
+function initSocket() {
+  socket = window.io(BACKEND_URL, {
+    transports: ["websocket", "polling"]
+  });
+
+  socket.on("connect", () => {
+    console.log("Connected to backend:", socket.id);
+  });
+
+  socket.on("waiting", () => {
+    document.getElementById("waiting-text").textContent = "Looking for someone...";
+    document.getElementById("remote-status-text").textContent = "Searching...";
+  });
+
+  socket.on("matched", async ({ partnerId: pid, initiator, partnerName: pn }) => {
+    partnerId = pid;
+    partnerName = pn || "Stranger";
+
+    document.getElementById("remote-label").textContent = partnerName;
+    document.getElementById("remote-status").classList.add("hidden");
+    document.getElementById("waiting-text").textContent = `Connected to ${partnerName}`;
+
+    addSysMsg(`Connected to ${partnerName}`);
+    await setupPeer(initiator);
+  });
+
+  socket.on("signal", async ({ from, data }) => {
+    if (!pc) return;
+
+    if (data.type === "offer") {
+      await pc.setRemoteDescription(new RTCSessionDescription(data));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit("signal", { to: from, data: answer });
+
+    } else if (data.type === "answer") {
+      await pc.setRemoteDescription(new RTCSessionDescription(data));
+
+    } else if (data.candidate) {
+      await pc.addIceCandidate(new RTCIceCandidate(data));
     }
+  });
+
+  socket.on("chat-message", ({ message, displayName }) => {
+    addMsg(message, displayName, "theirs");
+  });
+
+  socket.on("partner-disconnected", () => {
+    addSysMsg("Partner disconnected.");
+    resetPeer();
+    document.getElementById("remote-status").classList.remove("hidden");
+    document.getElementById("remote-status-text").textContent = "Press Next to find someone new";
+    document.getElementById("waiting-text").textContent = "Disconnected";
+    partnerId = null;
+  });
+
+  socket.on("skipped", () => {
+    resetPeer();
+    document.getElementById("remote-status-text").textContent = "Searching...";
+  });
+}
 
     async function setupPeer(initiator) {
       pc = new RTCPeerConnection(ICE_SERVERS);
